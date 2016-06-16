@@ -15,12 +15,19 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	QTabWidget *tabWidget = new QTabWidget(this);
 	layout->addWidget(tabWidget);
 
+	QFont monoSpacedFont;
+	monoSpacedFont.setStyleHint(QFont::Monospace);
+	monoSpacedFont.setFamily("Consolas");
+
 	QWidget *memoryPage = new QWidget();
 	memoryPage->setLayout(new QHBoxLayout(memoryPage));
 	memoryView = new QListView(memoryPage);
 	memoryPage->layout()->addWidget(memoryView);
 	memoryModel = new QStringListModel(memoryPage);
 	memoryView->setModel(memoryModel);
+	memoryView->setFont(monoSpacedFont);
+	memoryView->setMovement(QListView::Static);
+	memoryView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 	tabWidget->addTab(memoryPage, "Memory");
 
@@ -30,6 +37,9 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	registerPage->layout()->addWidget(registerView);
 	registerModel = new QStringListModel(registerPage);
 	registerView->setModel(registerModel);
+	registerView->setFont(monoSpacedFont);
+	registerView->setMovement(QListView::Static);
+	registerView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 	tabWidget->addTab(registerPage, "Registers");
 
@@ -39,6 +49,9 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	stackPage->layout()->addWidget(stackView);
 	stackModel = new QStringListModel(stackPage);
 	stackView->setModel(stackModel);
+	stackView->setFont(monoSpacedFont);
+	stackView->setMovement(QListView::Static);
+	stackView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 	tabWidget->addTab(stackPage, "Stack");
 	

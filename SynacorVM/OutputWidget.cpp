@@ -18,7 +18,7 @@ OutputWidget::OutputWidget(QWidget *parent)
 
 	listView->setMovement(QListView::Static);
 	listView->setWordWrap(true);
-
+	listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 	editWidget = new QLineEdit(this);
 	editWidget->setFont(monoSpacedFont);

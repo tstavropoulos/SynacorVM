@@ -63,7 +63,7 @@ uint16_t SynacorVM::Translate(uint16_t value)
 	return 0xFFFF;
 }
 
-void SynacorVM::Write(uint16_t address, uint16_t value)
+void SynacorVM::Write(uint16_t address, uint16_t value, bool emitUpdate)
 {
 	if (address <= 32767)
 	{
@@ -78,7 +78,10 @@ void SynacorVM::Write(uint16_t address, uint16_t value)
 		assert(0 && "Invalid address");
 	}
 
-	emit updateMemory(address, value);
+	if (emitUpdate)
+	{
+		emit updateMemory(address, value);
+	}
 }
 
 void SynacorVM::reset()
@@ -523,6 +526,36 @@ void SynacorVM::updateInput(const QString &input)
 		state = VMS_RUNNING;
 	}
 }
+
+
+void SynacorVM::changeMemory(uint16_t address, uint16_t value)
+{
+	Write(address, value, false);
+}
+
+void SynacorVM::changeRegister(uint16_t reg, uint16_t value)
+{
+	Write(reg + 32768, value, false);
+}
+
+void SynacorVM::changeStackPush(uint16_t value)
+{
+	stack.push_back(value);
+}
+
+void SynacorVM::changeStackPop()
+{
+	stack.pop_back();
+}
+
+void SynacorVM::changeStackModify(uint16_t index, uint16_t value)
+{
+	if (stack.size() > index)
+	{
+		stack[index] = value;
+	}
+}
+
 
 void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 {

@@ -22,6 +22,8 @@ AssemblyWidget::AssemblyWidget(QWidget *parent)
 
 	listModel = new QStringListModel(this);
 	listView->setModel(listModel);
+	listView->setMovement(QListView::Static);
+	listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
 void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringList &arguments)

@@ -37,7 +37,7 @@ protected:
 	QString StringTranslate(uint16_t value);
 	QString StringTranslateChar(uint16_t value);
 	uint16_t Translate(uint16_t value);
-	void Write(uint16_t address, uint16_t value);
+	void Write(uint16_t address, uint16_t value, bool emitUpdate = true);
 
 	uint16_t handleOp(const uint16_t opAddress);
 
@@ -58,10 +58,18 @@ protected:
 	int executionsPerUpdate;
 
 public slots:
+	//System Slots
 	void reset();
 	void pause(bool pause);
 	void update();
 	void updateInput(const QString &input);
+
+	//Memory Slots
+	void changeMemory(uint16_t address, uint16_t value);
+	void changeRegister(uint16_t reg, uint16_t value);
+	void changeStackPush(uint16_t value);
+	void changeStackPop();
+	void changeStackModify(uint16_t index, uint16_t value);
 
 signals:
 	//Output Signals
