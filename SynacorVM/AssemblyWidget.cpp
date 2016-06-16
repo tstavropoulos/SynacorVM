@@ -48,68 +48,89 @@ void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringL
 
 void AssemblyWidget::reduce()
 {
-	QString lastArg;
+	QString lastInstr;
 	QString tmpPrintBuffer;
-	//int lastNum = 0;
+
+	int instBegin = -1;
 
 	QStringList reducedList;
-	QList<int> reducedInstrNum;
 	int numDatas = 0;
+	int numNoops = 0;
 
 	for (int i = 0; i < instr.length(); i++)
 	{
-		bool haltWasData = false;
-
-		if (lastArg == "PRNT" && instr[i] != "PRNT")
+		QString thisInstr = instr[i];
+		QString thisArg = args[i];
+		if (lastInstr == "DATA" && thisInstr == "HALT")
 		{
-			reducedList << QString("%1:\t").arg(instrNum[i - 1]) + lastArg + " " + tmpPrintBuffer;
-			reducedInstrNum << instrNum[i - 1];
-			tmpPrintBuffer = "";
+			thisInstr = "DATA";
+			thisArg = "0000";
 		}
-		else if (lastArg == "DATA")
+		else if (lastInstr == "DATA" && thisInstr == "NOOP")
 		{
-			if (instr[i] == "HALT")
-			{
-				tmpPrintBuffer += QString("0000") + (((numDatas++ % 8) == 7) ? "\n" : " ");
-				haltWasData = true;
-			}
-			else if (instr[i] != "DATA")
-			{
-				reducedList << QString("%1:\t").arg(instrNum[i - 1]) + lastArg + "\n" + tmpPrintBuffer;
-				reducedInstrNum << instrNum[i - 1];
-				tmpPrintBuffer = "";
-			}
+			thisInstr = "DATA";
+			thisArg = "0015";
+		}
+		else if (thisInstr != "DATA")
+		{
+			numDatas = 0;
+		}
+
+		if (lastInstr == "PRNT" && thisInstr != "PRNT")
+		{
+			reducedList << QString("%1-%2:\t").arg(instBegin).arg(instrNum[i - 1]) + "PRNT " + tmpPrintBuffer;
+			tmpPrintBuffer = "";
+			instBegin = -1;
+		}
+		else if (lastInstr == "DATA" && (thisInstr != "DATA" || numDatas >= 8))
+		{
+			reducedList << QString("%1-%2:\t").arg(instBegin).arg(instrNum[i - 1]) + "DATA " + tmpPrintBuffer;
+			tmpPrintBuffer = "";
+			numDatas = 0;
+			instBegin = -1;
+		}
+		else if (lastInstr == "NOOP" && thisInstr != "NOOP")
+		{
+			reducedList << QString("%1-%2:\tNOOP\t(%3)").arg(instBegin).arg(instrNum[i - 1]).arg(numNoops);
+			numNoops = 0;
+			instBegin = -1;
 		}
 		
-		if (instr[i] == "")
+		if (thisInstr == "")
 		{
 			break;
 		}
 
-		if (instr[i] == "NOOP")
+		if (thisInstr == "NOOP")
 		{
-			continue;
+			numNoops++;
+			if (instBegin == -1)
+			{
+				instBegin = instrNum[i];
+			}
 		}
-
-		if (instr[i] == "PRNT")
+		else if (thisInstr == "PRNT")
 		{
-			tmpPrintBuffer += args[i];
+			tmpPrintBuffer += thisArg;
+			if (instBegin == -1)
+			{
+				instBegin = instrNum[i];
+			}
 		}
-		else if (instr[i] == "DATA")
+		else if (thisInstr == "DATA")
 		{
-			tmpPrintBuffer += args[i] + (((numDatas++ % 8) == 7) ? "\n" : " ");
+			tmpPrintBuffer += thisArg + " ";
+			numDatas++;
+			if (instBegin == -1)
+			{
+				instBegin = instrNum[i];
+			}
 		}
 		else
 		{
-			reducedList << QString("%1:\t").arg(instrNum[i]) + instr[i] + ((args[i] == "") ? ("") : (" " + args[i]));
-			reducedInstrNum << instrNum[i];
+			reducedList << QString("%1:\t").arg(instrNum[i]) + thisInstr + ((thisArg == "") ? ("") : (" " + thisArg));
 		}
-		
-		lastArg = haltWasData ? "DATA" : instr[i];
-		if (lastArg != "DATA")
-		{
-			numDatas = 0;
-		}
+		lastInstr = thisInstr;
 	}
 
 	listModel->setStringList(reducedList);
