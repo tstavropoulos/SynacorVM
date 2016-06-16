@@ -1,6 +1,5 @@
 #include <QMenu>
 #include <QtWidgets>
-#include <QSignalMapper>
 #include <QAction>
 #include <QActionGroup>
 
@@ -8,6 +7,7 @@
 #include "SourceDebugger.h"
 
 MainWindow::MainWindow(QWidget *parent)
+	: QMainWindow(parent)
 {
     sourceDebugger_ = new SourceDebugger(this);
     setCentralWidget(sourceDebugger_);
@@ -16,20 +16,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     createMenus();
 
-    resize(1060, 600);
+    resize(1600, 800);
 }
 
 void MainWindow::createMenus()
 {
-    //signalMapper = new QSignalMapper(this);
-
     fileMenu = menuBar()->addMenu(tr("&File"));
-
-	/*
-    QAction *saveAction = new QAction("&Save", this);
-    fileMenu->addAction(saveAction);
-    connect(saveAction, SIGNAL(triggered()), sourceDebugger_, SLOT(save()));
-	*/
+	
     QAction *loadAction = new QAction("&Load", this);
     fileMenu->addAction(loadAction);
     connect(loadAction, SIGNAL(triggered()), sourceDebugger_, SLOT(load()));
@@ -53,16 +46,6 @@ void MainWindow::createMenus()
 	QAction *exitAction = new QAction("E&xit", this);
 	fileMenu->addAction(exitAction);
 	connect(exitAction, SIGNAL(triggered()), sourceDebugger_, SLOT(exit()));
-
-
-	/*
-    QAction *downloadAction = new QAction("&Download", this);
-    fileMenu->addAction(downloadAction);
-    connect(downloadAction, SIGNAL(triggered()), sourceDebugger_, SLOT(fetch()));
-
-    fileMenu->addSeparator();
-    styleMenu = fileMenu->addMenu(tr("S&tyle"));
-	*/
 }
 
 

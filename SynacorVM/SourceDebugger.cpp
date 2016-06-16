@@ -18,7 +18,7 @@
 
 
 SourceDebugger::SourceDebugger(QWidget *parent)
-	: QWidget(parent)//, memory(c_dwAddressSpace)
+	: QWidget(parent)
 {
 	setObjectName("mainWidget");
 

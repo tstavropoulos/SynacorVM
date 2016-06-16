@@ -39,8 +39,6 @@ protected:
 
 	QFileDialog *fileDialog;
 
-	//std::vector<uint16_t> memory;
-
 };
 
 #endif // SOURCE_DEBUGGER_H_
