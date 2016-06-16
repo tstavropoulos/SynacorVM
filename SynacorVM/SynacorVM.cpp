@@ -27,7 +27,7 @@ QString SynacorVM::StringTranslateChar(uint16_t value)
 	}
 	else if (value <= 32775)
 	{
-		returnVal = QString("Reg:%1 ").arg(value - 32768);
+		returnVal = QString("r%1 ").arg(value - 32768);
 	}
 
 	return returnVal;
@@ -42,7 +42,7 @@ QString SynacorVM::StringTranslate(uint16_t value)
 	}
 	else if (value <= 32775)
 	{
-		returnVal = QString("Reg:%1 ").arg(value - 32768);
+		returnVal = QString("r%1 ").arg(value - 32768);
 	}
 
 	return returnVal;
@@ -296,7 +296,7 @@ void SynacorVM::run()
 #endif
 				const uint16_t a = memory[inst++];
 				const uint32_t b = Translate(memory[inst++]);
-				Write(a, (uint16_t)(~b & 0x7FFF) );
+				Write(a, (uint16_t)(~b & 0x7FFF));
 				break;
 			}
 
@@ -402,217 +402,281 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 		{
 			// halt: 0
 			// stop execution and terminate the program
-		case 0:
-		{
-			instructions = "HALT";
-			break;
-		}
+			case 0:
+			{
+				instructions = "HALT";
+				break;
+			}
 
-		//set: 1 a b
-		//set register <a> to the value of <b>
-		case 1:
-		{
-			instructions = "SET";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//set: 1 a b
+			//set register <a> to the value of <b>
+			case 1:
+			{
+				instructions = "SET";
+				if (i + 2 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//push : 2 a
-		//push <a> onto the stack
-		case 2:
-		{
-			instructions = "PUSH";
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//push : 2 a
+			//push <a> onto the stack
+			case 2:
+			{
+				instructions = "PUSH";
+				if (i + 1 < c_dwAddressSpace)
+				{
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//pop : 3 a
-		//remove the top element from the stack and write it into <a>; empty stack = error
-		case 3:
-		{
-			instructions = "POP";
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//pop : 3 a
+			//remove the top element from the stack and write it into <a>; empty stack = error
+			case 3:
+			{
+				instructions = "POP";
+				if (i + 1 < c_dwAddressSpace)
+				{
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//eq : 4 a b c
-		//set <a> to 1 if <b> is equal to <c>; set it to 0 otherwise
-		case 4:
-		{
-			instructions = "EQ";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//eq : 4 a b c
+			//set <a> to 1 if <b> is equal to <c>; set it to 0 otherwise
+			case 4:
+			{
+				instructions = "EQ";
+				if (i + 3 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//gt : 5 a b c
-		//set <a> to 1 if <b> is greater than <c>; set it to 0 otherwise
-		case 5:
-		{
-			instructions = "GT";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//gt : 5 a b c
+			//set <a> to 1 if <b> is greater than <c>; set it to 0 otherwise
+			case 5:
+			{
+				instructions = "GT";
+				if (i + 3 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//jmp : 6 a
-		//jump to <a>
-		case 6:
-		{
-			instructions = "JMP";
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//jmp : 6 a
+			//jump to <a>
+			case 6:
+			{
+				instructions = "JMP";
+				if (i + 1 < c_dwAddressSpace)
+				{
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//jt : 7 a b
-		//if <a> is nonzero, jump to <b>
-		case 7:
-		{
-			instructions = "JT";
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//jt : 7 a b
+			//if <a> is nonzero, jump to <b>
+			case 7:
+			{
+				instructions = "JT";
+				if (i + 2 < c_dwAddressSpace)
+				{
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//jf : 8 a b
-		//if <a> is zero, jump to <b>
-		case 8:
-		{
-			instructions = "JF";
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//jf : 8 a b
+			//if <a> is zero, jump to <b>
+			case 8:
+			{
+				instructions = "JF";
+				if (i + 2 < c_dwAddressSpace)
+				{
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//add : 9 a b c
-		//assign into <a> the sum of <b> and <c> (modulo 32768)
-		case 9:
-		{
-			instructions = "ADD";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//add : 9 a b c
+			//assign into <a> the sum of <b> and <c> (modulo 32768)
+			case 9:
+			{
+				instructions = "ADD";
+				if (i + 3 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//mult : 10 a b c
-		//store into <a> the product of <b> and <c> (modulo 32768)
-		case 10:
-		{
-			instructions = "MULT";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//mult : 10 a b c
+			//store into <a> the product of <b> and <c> (modulo 32768)
+			case 10:
+			{
+				instructions = "MULT";
+				if (i + 3 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//mod : 11 a b c
-		//store into <a> the remainder of <b> divided by <c>
-		case 11:
-		{
-			instructions = "MOD";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//mod : 11 a b c
+			//store into <a> the remainder of <b> divided by <c>
+			case 11:
+			{
+				instructions = "MOD";
+				if (i + 3 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//and : 12 a b c
-		//stores into <a> the bitwise and of <b> and <c>
-		case 12:
-		{
-			instructions = "AND";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//and : 12 a b c
+			//stores into <a> the bitwise and of <b> and <c>
+			case 12:
+			{
+				instructions = "AND";
+				if (i + 3 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//or : 13 a b c
-		//stores into <a> the bitwise or of <b> and <c>
-		case 13:
-		{
-			instructions = "OR";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//or : 13 a b c
+			//stores into <a> the bitwise or of <b> and <c>
+			case 13:
+			{
+				instructions = "OR";
+				if (i + 3 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//not: 14 a b
-		//stores 15 - bit bitwise inverse of <b> in <a>
-		case 14:
-		{
-			instructions = "NOT";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//not: 14 a b
+			//stores 15 - bit bitwise inverse of <b> in <a>
+			case 14:
+			{
+				instructions = "NOT";
+				if (i + 2 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//rmem : 15 a b
-		//read memory at address <b> and write it to <a>
-		case 15:
-		{
-			instructions = "RMEM";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//rmem : 15 a b
+			//read memory at address <b> and write it to <a>
+			case 15:
+			{
+				instructions = "RMEM";
+				if (i + 2 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//wmem : 16 a b
-		//write the value from <b> into memory at address <a>
-		case 16:
-		{
-			instructions = "WMEM";
-			arguments += StringTranslate(memory[i++]);
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//wmem : 16 a b
+			//write the value from <b> into memory at address <a>
+			case 16:
+			{
+				instructions = "WMEM";
+				if (i + 2 < c_dwAddressSpace)
+				{
+					arguments += StringTranslate(memory[i++]);
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//call : 17 a
-		//write the address of the next instruction to the stack and jump to <a>
-		case 17:
-		{
-			instructions = "CALL";
-			arguments += StringTranslate(memory[i++]);
-			break;
-		}
+			//call : 17 a
+			//write the address of the next instruction to the stack and jump to <a>
+			case 17:
+			{
+				instructions = "CALL";
+				if (i + 1 < c_dwAddressSpace)
+				{
+					arguments += StringTranslate(memory[i++]);
+				}
+				break;
+			}
 
-		//ret : 18
-		//remove the top element from the stack and jump to it; empty stack = halt
-		case 18:
-		{
-			instructions = "RET";
-			break;
-		}
+			//ret : 18
+			//remove the top element from the stack and jump to it; empty stack = halt
+			case 18:
+			{
+				instructions = "RET";
+				break;
+			}
 
-		//out : 19 a
-		//write the character represented by ascii code <a> to the terminal
-		case 19:
-		{
-			instructions = "PRNT";
-			arguments += StringTranslateChar(memory[i++]);
-			break;
-		}
-		//in : 20 a
-		//read a character from the terminal and write its ascii code to <a>; it can be assumed that once input starts, it will continue until a newline is encountered; this means that you can safely read whole lines from the keyboard and trust that they will be fully read
-		case 20:
-		{
-			instructions = "IN";
-			arguments += QString("Reg:%1 ").arg(memory[i++] - 32768);
-			break;
-		}
+			//out : 19 a
+			//write the character represented by ascii code <a> to the terminal
+			case 19:
+			{
+				instructions = "PRNT";
+				if (i + 1 < c_dwAddressSpace)
+				{
+					arguments += StringTranslateChar(memory[i++]);
+				}
+				break;
+			}
+			//in : 20 a
+			//read a character from the terminal and write its ascii code to <a>; it can be assumed that once input starts, it will continue until a newline is encountered; this means that you can safely read whole lines from the keyboard and trust that they will be fully read
+			case 20:
+			{
+				instructions = "IN";
+				if (i + 1 < c_dwAddressSpace)
+				{
+					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+				}
+				break;
+			}
 
-		//noop : 21
-		//no instructions
-		case 21:
-		{
-			instructions = "NOOP";
-			break;
-		}
+			//noop : 21
+			//no instructions
+			case 21:
+			{
+				instructions = "NOOP";
+				break;
+			}
+
+			default:
+			{
+				instructions = "DATA";
+				arguments += QString("%1").arg(op);
+				break;
+			}
 		}
 
 		instr << instructions;
