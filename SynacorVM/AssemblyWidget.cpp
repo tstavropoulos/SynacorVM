@@ -11,6 +11,10 @@ AssemblyWidget::AssemblyWidget(QWidget *parent)
 	QHBoxLayout *layout = new QHBoxLayout(this);
 
 	listView = new QListView(this);
+	QFont monoSpacedFont;
+	monoSpacedFont.setStyleHint(QFont::Monospace);
+	monoSpacedFont.setFamily("Consolas");
+	listView->setFont(monoSpacedFont);
 	layout->addWidget(listView);
 
 	setLayout(layout);
@@ -34,7 +38,7 @@ void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringL
 		{
 			break;
 		}
-		temp << QString("%1\t").arg(i) + instr[i] + " - " + args[i];
+		temp << QString("%1\t").arg(i) + instr[i] + " " + args[i];
 		instrNum << i;
 	}
 
@@ -50,16 +54,33 @@ void AssemblyWidget::reduce()
 
 	QStringList reducedList;
 	QList<int> reducedInstrNum;
+	int numDatas = 0;
 
 	for (int i = 0; i < instr.length(); i++)
 	{
+		bool haltWasData = false;
+
 		if (lastArg == "PRNT" && instr[i] != "PRNT")
 		{
-			reducedList << QString("%1:\t").arg(instrNum[i-1]) + lastArg + " - " + tmpPrintBuffer;
+			reducedList << QString("%1:\t").arg(instrNum[i - 1]) + lastArg + " " + tmpPrintBuffer;
 			reducedInstrNum << instrNum[i - 1];
 			tmpPrintBuffer = "";
 		}
-
+		else if (lastArg == "DATA")
+		{
+			if (instr[i] == "HALT")
+			{
+				tmpPrintBuffer += QString("0000") + (((numDatas++ % 8) == 7) ? "\n" : " ");
+				haltWasData = true;
+			}
+			else if (instr[i] != "DATA")
+			{
+				reducedList << QString("%1:\t").arg(instrNum[i - 1]) + lastArg + "\n" + tmpPrintBuffer;
+				reducedInstrNum << instrNum[i - 1];
+				tmpPrintBuffer = "";
+			}
+		}
+		
 		if (instr[i] == "")
 		{
 			break;
@@ -69,18 +90,26 @@ void AssemblyWidget::reduce()
 		{
 			continue;
 		}
-		
+
 		if (instr[i] == "PRNT")
 		{
 			tmpPrintBuffer += args[i];
 		}
+		else if (instr[i] == "DATA")
+		{
+			tmpPrintBuffer += args[i] + (((numDatas++ % 8) == 7) ? "\n" : " ");
+		}
 		else
 		{
-			reducedList << QString("%1:\t").arg(instrNum[i]) + instr[i] + ((args[i] == "") ? ("") : (" - " + args[i]));
+			reducedList << QString("%1:\t").arg(instrNum[i]) + instr[i] + ((args[i] == "") ? ("") : (" " + args[i]));
 			reducedInstrNum << instrNum[i];
 		}
 		
-		lastArg = instr[i];
+		lastArg = haltWasData ? "DATA" : instr[i];
+		if (lastArg != "DATA")
+		{
+			numDatas = 0;
+		}
 	}
 
 	listModel->setStringList(reducedList);

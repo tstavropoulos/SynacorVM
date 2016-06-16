@@ -674,7 +674,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			default:
 			{
 				instructions = "DATA";
-				arguments += QString("%1").arg(op);
+				arguments += QString("%1").arg(op, 4, 16, QChar('0'));
 				break;
 			}
 		}
