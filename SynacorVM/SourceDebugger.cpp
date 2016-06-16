@@ -46,9 +46,20 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	connect(outputWidget, SIGNAL(submitInput(const QString&)), synacorVM, SLOT(updateInput(const QString&)));
 
-	QTimer *timer = new QTimer(this);
-	connect(timer, SIGNAL(timeout()), synacorVM, SLOT(update()));
-	timer->start(10);
+	connect(synacorVM, SIGNAL(updateMemory(uint16_t, uint16_t)), memoryWidget, SLOT(updateMemory(uint16_t, uint16_t)));
+	connect(synacorVM, SIGNAL(updateRegister(uint16_t, uint16_t)), memoryWidget, SLOT(updateRegister(uint16_t, uint16_t)));
+	connect(synacorVM, SIGNAL(pushStack(uint16_t)), memoryWidget, SLOT(pushStack(uint16_t)));
+	connect(synacorVM, SIGNAL(popStack()), memoryWidget, SLOT(popStack()));
+
+	//Timer for triggering VM updates
+	QTimer *VMTtimer = new QTimer(this);
+	connect(VMTtimer, SIGNAL(timeout()), synacorVM, SLOT(update()));
+	VMTtimer->start(10);
+
+	//Timer for triggering UI updates of the Memory Widget
+	QTimer *memoryTimer = new QTimer(this);
+	connect(memoryTimer, SIGNAL(timeout()), memoryWidget, SLOT(update()));
+	memoryTimer->start(1000);
 }
 
 void SourceDebugger::load()
@@ -75,10 +86,14 @@ void SourceDebugger::load()
 		
 		synacorVM->load(memory);
 
+		//Update the AssemblyWidget
 		QStringList instr, args;
 
 		synacorVM->getAssembly(instr, args);
 		assemblyWidget->setAssembly(instr, args);
+
+		//Pass a copy of the memory to the MemoryWidget
+		memoryWidget->load(memory);
 	}
 }
 
@@ -129,6 +144,7 @@ void SourceDebugger::reset()
 {
 	synacorVM->reset();
 	outputWidget->clear();
+	memoryWidget->reset();
 
 	QStringList instr, args;
 

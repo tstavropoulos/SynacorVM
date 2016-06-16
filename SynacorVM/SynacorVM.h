@@ -64,10 +64,19 @@ public slots:
 	void updateInput(const QString &input);
 
 signals:
+	//Output Signals
 	void print(const QString &output);
 	void clear();
 	void awaitingInput();
+
+	//UI Signals
 	void throwError(VMErrors error);
+
+	//Memory Signals
+	void updateMemory(uint16_t address, uint16_t value);
+	void updateRegister(uint16_t reg, uint16_t value);
+	void pushStack(uint16_t value);
+	void popStack();
 };
 
 #endif

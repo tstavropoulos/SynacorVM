@@ -77,6 +77,8 @@ void SynacorVM::Write(uint16_t address, uint16_t value)
 	{
 		assert(0 && "Invalid address");
 	}
+
+	emit updateMemory(address, value);
 }
 
 void SynacorVM::reset()
@@ -205,6 +207,8 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		const uint16_t b = Translate(memory[tempInst++]);
 		assert(a >= 32768 && a < 32768 + c_dwNumRegisters);
 		registers[a - 32768] = b;
+
+		emit updateRegister(a - 32768, b);
 		break;
 	}
 
@@ -217,6 +221,8 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 #endif
 		const uint16_t a = Translate(memory[tempInst++]);
 		stack.push_back(a);
+
+		emit pushStack(a);
 		break;
 	}
 
@@ -230,7 +236,10 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		const uint16_t a = memory[tempInst++];
 		assert(!stack.empty());
 		const uint16_t top = stack.back();
+
 		stack.pop_back();
+		emit popStack();
+
 		Write(a, top);
 		break;
 	}
@@ -413,6 +422,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		const uint16_t a = Translate(memory[tempInst++]);
 		const uint16_t b = Translate(memory[tempInst++]);
 		memory[a] = b;
+		emit updateMemory(a, b);
 		break;
 	}
 
@@ -425,6 +435,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 #endif
 		const uint16_t a = Translate(memory[tempInst++]);
 		stack.push_back(tempInst);
+		emit pushStack(tempInst);
 		tempInst = a;
 		break;
 	}
@@ -444,6 +455,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		{
 			const uint16_t top = stack.back();
 			stack.pop_back();
+			emit popStack();
 			tempInst = top;
 			break;
 		}
