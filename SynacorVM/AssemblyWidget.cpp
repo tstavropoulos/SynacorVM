@@ -4,9 +4,10 @@
 #include <QHBoxLayout>
 #include <QStringListModel>
 #include <QListView>
+#include <QMessageBox>
 
 AssemblyWidget::AssemblyWidget(QWidget *parent)
-	: QWidget(parent)
+	: QWidget(parent), loaded(false)
 {
 	QHBoxLayout *layout = new QHBoxLayout(this);
 
@@ -25,8 +26,6 @@ AssemblyWidget::AssemblyWidget(QWidget *parent)
 
 void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringList &arguments)
 {
-	//const uint16_t *assembly = (const uint16_t *)buffer;
-
 	instr = instructions;
 	args = arguments;
 
@@ -44,10 +43,20 @@ void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringL
 
 
 	listModel->setStringList(temp);
+
+	loaded = true;
 }
 
 void AssemblyWidget::reduce()
 {
+	if (!loaded)
+	{
+		QMessageBox::warning(this,
+			QString("Reduce Error"),
+			QString("You cannot reduce the program until you load a binary file."));
+		return;
+	}
+
 	QString lastInstr;
 	QString tmpPrintBuffer;
 

@@ -1,16 +1,32 @@
 #include "OutputWidget.h"
 
 #include <QListView>
-#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QStringListModel>
+#include <QLineEdit>
 
 OutputWidget::OutputWidget(QWidget *parent)
 	: QWidget(parent)
 {
-	QHBoxLayout *layout = new QHBoxLayout(this);
+	QVBoxLayout *layout = new QVBoxLayout(this);
 
 	listView = new QListView(this);
+	QFont monoSpacedFont;
+	monoSpacedFont.setStyleHint(QFont::Monospace);
+	monoSpacedFont.setFamily("Consolas");
+	listView->setFont(monoSpacedFont);
+
+	listView->setMovement(QListView::Static);
+	listView->setWordWrap(true);
+
+
+	editWidget = new QLineEdit(this);
+	editWidget->setFont(monoSpacedFont);
+
+	connect(editWidget, SIGNAL(returnPressed()), this, SLOT(lineEditReturn()));
+
 	layout->addWidget(listView);
+	layout->addWidget(editWidget);
 
 	setLayout(layout);
 
@@ -22,6 +38,16 @@ OutputWidget::OutputWidget(QWidget *parent)
 	listModel->setStringList(output);
 }
 
+void OutputWidget::lineEditReturn()
+{
+	//Add a linefeed to the end of the input
+	QString input = editWidget->text() + QString(10);
+
+	//Clear the text
+	editWidget->clear();
+
+	emit submitInput(input);
+}
 
 void OutputWidget::print(const QString &line)
 {
@@ -36,9 +62,11 @@ void OutputWidget::print(const QString &line)
 			output.back() += line[i];
 		}
 	}
-
-	listModel->setStringList(output);
 	
+	listModel->setStringList(output);
+
+	listView->scrollToBottom();
+
 }
 
 void OutputWidget::clear()

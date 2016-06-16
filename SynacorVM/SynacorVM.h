@@ -7,6 +7,22 @@
 static const size_t c_dwAddressSpace = 1 << 15;
 static const size_t c_dwNumRegisters = 8;
 
+enum VMState
+{
+	VMS_HALTED = 0,
+	VMS_AWAITING_INPUT,
+	VMS_RUNNING,
+	VMS_MAX
+};
+
+enum VMErrors
+{
+	VME_RUN_NO_FILE_LOADED = 0,
+	VME_RESET_NO_FILE_LOADED,
+	VME_MAX
+};
+
+
 class SynacorVM : public QObject
 {
 	Q_OBJECT
@@ -23,14 +39,35 @@ protected:
 	uint16_t Translate(uint16_t value);
 	void Write(uint16_t address, uint16_t value);
 
+	uint16_t handleOp(const uint16_t opAddress);
+
+	std::vector<uint16_t> startMemoryBU;
 	std::vector<uint16_t> memory;
 	std::vector<uint16_t> registers;
 	std::vector<uint16_t> stack;
 
+	uint16_t inst;
+
+	bool loaded;
+	bool paused;
+
+	QString bufferedInput;
+
+	VMState state;
+
+	int executionsPerUpdate;
+
+public slots:
+	void reset();
+	void pause(bool pause);
+	void update();
+	void updateInput(const QString &input);
 
 signals:
 	void print(const QString &output);
 	void clear();
+	void awaitingInput();
+	void throwError(VMErrors error);
 };
 
 #endif

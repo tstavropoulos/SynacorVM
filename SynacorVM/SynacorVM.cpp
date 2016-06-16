@@ -11,8 +11,10 @@
 
 #define VERBOSE_PRINTS 0
 
+
+
 SynacorVM::SynacorVM()
-	: registers(c_dwNumRegisters)//, memory(c_dwAddressSpace)
+	: registers(c_dwNumRegisters), inst(0), state(VMS_HALTED), executionsPerUpdate(1000), loaded(false)
 {
 
 }
@@ -77,321 +79,448 @@ void SynacorVM::Write(uint16_t address, uint16_t value)
 	}
 }
 
-void SynacorVM::load(const std::vector<uint16_t> &buffer)
+void SynacorVM::reset()
 {
-	memory = std::vector<uint16_t>(buffer);
+	if (!loaded)
+	{
+		emit throwError(VME_RESET_NO_FILE_LOADED);
+		return;
+	}
+
+	inst = 0;
+	state = VMS_HALTED;
+	paused = false;
+	memory = std::vector<uint16_t>(startMemoryBU);
+	bufferedInput = QString();
 }
 
 void SynacorVM::run()
 {
-	uint16_t inst = 0;
-	bool halted = false;
-	while (!halted)
+	if (!loaded)
 	{
-		const uint16_t op = memory[inst++];
+		emit throwError(VME_RUN_NO_FILE_LOADED);
+		return;
+	}
 
-		switch (op)
+	reset();
+	state = VMS_RUNNING;
+}
+
+void SynacorVM::pause(bool pause)
+{
+	switch (state)
+	{
+	case VMS_AWAITING_INPUT:
+	{
+		paused = pause;
+		break;
+	}
+	case VMS_HALTED:
+	{
+
+		break;
+	}
+	case VMS_RUNNING:
+	{
+		paused = pause;
+		break;
+	}
+	default:
+	{
+		assert(0 && "State unsupported.");
+		break;
+	}
+	}
+}
+
+void SynacorVM::load(const std::vector<uint16_t> &buffer)
+{
+	memory = std::vector<uint16_t>(buffer);
+	startMemoryBU = std::vector<uint16_t>(buffer);
+
+	loaded = true;
+}
+
+void SynacorVM::update()
+{
+	if (!paused)
+	{
+		switch (state)
 		{
-			// halt: 0
-			// stop execution and terminate the program
-			case 0:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "HALT" << std::endl;
-#endif
-				halted = true;
-				break;
-			}
-
-			//set: 1 a b
-			//set register <a> to the value of <b>
-			case 1:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "SET " << memory[inst] << " " << memory[inst + 1] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t b = Translate(memory[inst++]);
-				assert(a >= 32768 && a < 32768 + c_dwNumRegisters);
-				registers[a - 32768] = b;
-				break;
-			}
-
-			//push : 2 a
-			//push <a> onto the stack
-			case 2:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "PUSH " << memory[inst] << std::endl;
-#endif
-				const uint16_t a = Translate(memory[inst++]);
-				stack.push_back(a);
-				break;
-			}
-
-			//pop : 3 a
-			//remove the top element from the stack and write it into <a>; empty stack = error
-			case 3:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "POP " << memory[inst] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				assert(!stack.empty());
-				const uint16_t top = stack.back();
-				stack.pop_back();
-				Write(a, top);
-				break;
-			}
-
-			//eq : 4 a b c
-			//set <a> to 1 if <b> is equal to <c>; set it to 0 otherwise
-			case 4:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "EQ " << memory[inst] << " " << memory[inst + 1] << " " << memory[inst + 2] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t b = Translate(memory[inst++]);
-				const uint16_t c = Translate(memory[inst++]);
-				Write(a, b == c ? 1 : 0);
-				break;
-			}
-
-			//gt : 5 a b c
-			//set <a> to 1 if <b> is greater than <c>; set it to 0 otherwise
-			case 5:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "GT " << memory[inst] << " " << memory[inst + 1] << " " << memory[inst + 2] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t b = Translate(memory[inst++]);
-				const uint16_t c = Translate(memory[inst++]);
-				Write(a, b > c ? 1 : 0);
-				break;
-			}
-
-			//jmp : 6 a
-			//jump to <a>
-			case 6:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "JMP " << memory[inst] << std::endl;
-#endif
-				const uint16_t a = Translate(memory[inst++]);
-				inst = a;
-				break;
-			}
-
-			//jt : 7 a b
-			//if <a> is nonzero, jump to <b>
-			case 7:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "JT " << memory[inst] << " " << memory[inst + 1] << std::endl;
-#endif
-				const uint16_t a = Translate(memory[inst++]);
-				const uint16_t b = Translate(memory[inst++]);
-				if (a != 0)
-				{
-					inst = b;
-				}
-				break;
-			}
-
-			//jf : 8 a b
-			//if <a> is zero, jump to <b>
-			case 8:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "JF " << memory[inst] << " " << memory[inst + 1] << std::endl;
-#endif
-				const uint16_t a = Translate(memory[inst++]);
-				const uint16_t b = Translate(memory[inst++]);
-				if (a == 0)
-				{
-					inst = b;
-				}
-				break;
-			}
-
-			//add : 9 a b c
-			//assign into <a> the sum of <b> and <c> (modulo 32768)
-			case 9:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "ADD " << memory[inst] << " " << memory[inst + 1] << " " << memory[inst + 2] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint32_t b = Translate(memory[inst++]);
-				const uint32_t c = Translate(memory[inst++]);
-				Write(a, (uint16_t)((b + c) % 32768));
-				break;
-			}
-
-			//mult : 10 a b c
-			//store into <a> the product of <b> and <c> (modulo 32768)
-			case 10:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "MULT " << memory[inst] << " " << memory[inst + 1] << " " << memory[inst + 2] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint64_t b = Translate(memory[inst++]);
-				const uint64_t c = Translate(memory[inst++]);
-				Write(a, (uint16_t)((b * c) % 32768));
-				break;
-			}
-
-			//mod : 11 a b c
-			//store into <a> the remainder of <b> divided by <c>
-			case 11:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "MOD " << memory[inst] << " " << memory[inst + 1] << " " << memory[inst + 2] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t b = Translate(memory[inst++]);
-				const uint16_t c = Translate(memory[inst++]);
-				Write(a, b % c);
-				break;
-			}
-
-			//and : 12 a b c
-			//stores into <a> the bitwise and of <b> and <c>
-			case 12:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "AND " << memory[inst] << " " << memory[inst + 1] << " " << memory[inst + 2] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t b = Translate(memory[inst++]);
-				const uint16_t c = Translate(memory[inst++]);
-				Write(a, b & c);
-				break;
-			}
-
-			//or : 13 a b c
-			//stores into <a> the bitwise or of <b> and <c>
-			case 13:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "OR " << memory[inst] << " " << memory[inst + 1] << " " << memory[inst + 2] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t b = Translate(memory[inst++]);
-				const uint16_t c = Translate(memory[inst++]);
-				Write(a, b | c);
-				break;
-			}
-
-			//not: 14 a b
-			//stores 15 - bit bitwise inverse of <b> in <a>
-			case 14:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "NOT " << memory[inst] << " " << memory[inst + 1] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint32_t b = Translate(memory[inst++]);
-				Write(a, (uint16_t)(~b & 0x7FFF));
-				break;
-			}
-
-			//rmem : 15 a b
-			//read memory at address <b> and write it to <a>
-			case 15:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "RMEM " << memory[inst] << " " << memory[inst + 1] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t b = Translate(memory[inst++]);
-				Write(a, memory[b]);
-				break;
-			}
-
-			//wmem : 16 a b
-			//write the value from <b> into memory at address <a>
-			case 16:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "WMEM " << memory[inst] << " " << memory[inst + 1] << std::endl;
-#endif
-				const uint16_t a = Translate(memory[inst++]);
-				const uint16_t b = Translate(memory[inst++]);
-				memory[a] = b;
-				break;
-			}
-
-			//call : 17 a
-			//write the address of the next instruction to the stack and jump to <a>
-			case 17:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "CALL " << memory[inst] << std::endl;
-#endif
-				const uint16_t a = Translate(memory[inst++]);
-				stack.push_back(inst);
-				inst = a;
-				break;
-			}
-
-			//ret : 18
-			//remove the top element from the stack and jump to it; empty stack = halt
-			case 18:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "RET" << std::endl;
-#endif
-				if (stack.empty())
-				{
-					halted = true;
-				}
-				else
-				{
-					const uint16_t top = stack.back();
-					stack.pop_back();
-					inst = top;
-					break;
-				}
-			}
-
-			//out : 19 a
-			//write the character represented by ascii code <a> to the terminal
-			case 19:
-			{
-				const uint16_t a = Translate(memory[inst++]);
-				emit print(QString((char)a));
-				//std::cout << (char)a;
-				break;
-			}
-			//in : 20 a
-			//read a character from the terminal and write its ascii code to <a>; it can be assumed that once input starts, it will continue until a newline is encountered; this means that you can safely read whole lines from the keyboard and trust that they will be fully read
-			case 20:
-			{
-#if VERBOSE_PRINTS
-				std::cout << "[" << inst - 1 << "]" << "IN " << memory[inst] << std::endl;
-#endif
-				const uint16_t a = memory[inst++];
-				const uint16_t input = (uint16_t)std::cin.get();
-				Write(a, input);
-				break;
-			}
-
-			//noop : 21
-			//no operation
-			case 21:
-			{
-				break;
-			}
+		case VMS_AWAITING_INPUT:
+		{
+			break;
 		}
+		case VMS_HALTED:
+		{
+			break;
+		}
+		case VMS_RUNNING:
+		{
+			int executionCount = executionsPerUpdate;
+			while (state == VMS_RUNNING && executionCount-- > 0 && !paused)
+			{
+				inst = handleOp(inst);
+			}
+
+			break;
+		}
+		default:
+		{
+			assert(0 && "State unsupported.");
+			break;
+		}
+		}
+
+	}
+}
+
+// Executes the operation at the indicated address and returns the new address pointer
+uint16_t SynacorVM::handleOp(const uint16_t opAddress)
+{
+	uint16_t tempInst = opAddress;
+	const uint16_t op = memory[tempInst++];
+
+	switch (op)
+	{
+		// halt: 0
+		// stop execution and terminate the program
+	case 0:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "HALT" << std::endl;
+#endif
+		state = VMS_HALTED;
+		break;
+	}
+
+	//set: 1 a b
+	//set register <a> to the value of <b>
+	case 1:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "SET " << memory[tempInst] << " " << memory[tempInst + 1] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint16_t b = Translate(memory[tempInst++]);
+		assert(a >= 32768 && a < 32768 + c_dwNumRegisters);
+		registers[a - 32768] = b;
+		break;
+	}
+
+	//push : 2 a
+	//push <a> onto the stack
+	case 2:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "PUSH " << memory[tempInst] << std::endl;
+#endif
+		const uint16_t a = Translate(memory[tempInst++]);
+		stack.push_back(a);
+		break;
+	}
+
+	//pop : 3 a
+	//remove the top element from the stack and write it into <a>; empty stack = error
+	case 3:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "POP " << memory[tempInst] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		assert(!stack.empty());
+		const uint16_t top = stack.back();
+		stack.pop_back();
+		Write(a, top);
+		break;
+	}
+
+	//eq : 4 a b c
+	//set <a> to 1 if <b> is equal to <c>; set it to 0 otherwise
+	case 4:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "EQ " << memory[tempInst] << " " << memory[tempInst + 1] << " " << memory[tempInst + 2] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint16_t b = Translate(memory[tempInst++]);
+		const uint16_t c = Translate(memory[tempInst++]);
+		Write(a, b == c ? 1 : 0);
+		break;
+	}
+
+	//gt : 5 a b c
+	//set <a> to 1 if <b> is greater than <c>; set it to 0 otherwise
+	case 5:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "GT " << memory[tempInst] << " " << memory[tempInst + 1] << " " << memory[tempInst + 2] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint16_t b = Translate(memory[tempInst++]);
+		const uint16_t c = Translate(memory[tempInst++]);
+		Write(a, b > c ? 1 : 0);
+		break;
+	}
+
+	//jmp : 6 a
+	//jump to <a>
+	case 6:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "JMP " << memory[tempInst] << std::endl;
+#endif
+		const uint16_t a = Translate(memory[tempInst++]);
+		tempInst = a;
+		break;
+	}
+
+	//jt : 7 a b
+	//if <a> is nonzero, jump to <b>
+	case 7:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "JT " << memory[tempInst] << " " << memory[tempInst + 1] << std::endl;
+#endif
+		const uint16_t a = Translate(memory[tempInst++]);
+		const uint16_t b = Translate(memory[tempInst++]);
+		if (a != 0)
+		{
+			tempInst = b;
+		}
+		break;
+	}
+
+	//jf : 8 a b
+	//if <a> is zero, jump to <b>
+	case 8:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "JF " << memory[tempInst] << " " << memory[tempInst + 1] << std::endl;
+#endif
+		const uint16_t a = Translate(memory[tempInst++]);
+		const uint16_t b = Translate(memory[tempInst++]);
+		if (a == 0)
+		{
+			tempInst = b;
+		}
+		break;
+	}
+
+	//add : 9 a b c
+	//assign into <a> the sum of <b> and <c> (modulo 32768)
+	case 9:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "ADD " << memory[tempInst] << " " << memory[tempInst + 1] << " " << memory[tempInst + 2] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint32_t b = Translate(memory[tempInst++]);
+		const uint32_t c = Translate(memory[tempInst++]);
+		Write(a, (uint16_t)((b + c) % 32768));
+		break;
+	}
+
+	//mult : 10 a b c
+	//store into <a> the product of <b> and <c> (modulo 32768)
+	case 10:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "MULT " << memory[tempInst] << " " << memory[tempInst + 1] << " " << memory[tempInst + 2] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint64_t b = Translate(memory[tempInst++]);
+		const uint64_t c = Translate(memory[tempInst++]);
+		Write(a, (uint16_t)((b * c) % 32768));
+		break;
+	}
+
+	//mod : 11 a b c
+	//store into <a> the remainder of <b> divided by <c>
+	case 11:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "MOD " << memory[tempInst] << " " << memory[tempInst + 1] << " " << memory[tempInst + 2] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint16_t b = Translate(memory[tempInst++]);
+		const uint16_t c = Translate(memory[tempInst++]);
+		Write(a, b % c);
+		break;
+	}
+
+	//and : 12 a b c
+	//stores into <a> the bitwise and of <b> and <c>
+	case 12:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "AND " << memory[tempInst] << " " << memory[tempInst + 1] << " " << memory[tempInst + 2] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint16_t b = Translate(memory[tempInst++]);
+		const uint16_t c = Translate(memory[tempInst++]);
+		Write(a, b & c);
+		break;
+	}
+
+	//or : 13 a b c
+	//stores into <a> the bitwise or of <b> and <c>
+	case 13:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "OR " << memory[tempInst] << " " << memory[tempInst + 1] << " " << memory[tempInst + 2] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint16_t b = Translate(memory[tempInst++]);
+		const uint16_t c = Translate(memory[tempInst++]);
+		Write(a, b | c);
+		break;
+	}
+
+	//not: 14 a b
+	//stores 15 - bit bitwise inverse of <b> in <a>
+	case 14:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "NOT " << memory[tempInst] << " " << memory[tempInst + 1] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint32_t b = Translate(memory[tempInst++]);
+		Write(a, (uint16_t)(~b & 0x7FFF));
+		break;
+	}
+
+	//rmem : 15 a b
+	//read memory at address <b> and write it to <a>
+	case 15:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "RMEM " << memory[tempInst] << " " << memory[tempInst + 1] << std::endl;
+#endif
+		const uint16_t a = memory[tempInst++];
+		const uint16_t b = Translate(memory[tempInst++]);
+		Write(a, memory[b]);
+		break;
+	}
+
+	//wmem : 16 a b
+	//write the value from <b> into memory at address <a>
+	case 16:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "WMEM " << memory[tempInst] << " " << memory[tempInst + 1] << std::endl;
+#endif
+		const uint16_t a = Translate(memory[tempInst++]);
+		const uint16_t b = Translate(memory[tempInst++]);
+		memory[a] = b;
+		break;
+	}
+
+	//call : 17 a
+	//write the address of the next tempInstruction to the stack and jump to <a>
+	case 17:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "CALL " << memory[tempInst] << std::endl;
+#endif
+		const uint16_t a = Translate(memory[tempInst++]);
+		stack.push_back(tempInst);
+		tempInst = a;
+		break;
+	}
+
+	//ret : 18
+	//remove the top element from the stack and jump to it; empty stack = halt
+	case 18:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "RET" << std::endl;
+#endif
+		if (stack.empty())
+		{
+			state = VMS_HALTED;
+		}
+		else
+		{
+			const uint16_t top = stack.back();
+			stack.pop_back();
+			tempInst = top;
+			break;
+		}
+	}
+
+	//out : 19 a
+	//write the character represented by ascii code <a> to the terminal
+	case 19:
+	{
+		const uint16_t a = Translate(memory[tempInst++]);
+		emit print(QString((char)a));
+		//std::cout << (char)a;
+		break;
+	}
+	//in : 20 a
+	//read a character from the terminal and write its ascii code to <a>; it can be assumed that once input starts, it will continue until a newline is encountered; this means that you can safely read whole lines from the keyboard and trust that they will be fully read
+	case 20:
+	{
+#if VERBOSE_PRINTS
+		std::cout << "[" << tempInst - 1 << "]" << "IN " << memory[tempInst] << std::endl;
+#endif
+		if (bufferedInput.length() > 0)
+		{
+			const uint16_t a = memory[tempInst++];
+			const int16_t input = bufferedInput[0].toLatin1();
+			bufferedInput.remove(0, 1);
+			Write(a, input);
+		}
+		else
+		{
+			state = VMS_AWAITING_INPUT;
+
+			//Move back to the operation that caused us to wait for input
+			tempInst--;
+
+			emit awaitingInput();
+		}
+		//const uint16_t input = (uint16_t)std::cin.get();
+		//Write(a, input);
+		break;
+	}
+
+	//noop : 21
+	//no operation
+	case 21:
+	{
+		break;
+	}
+	}
+	
+	return tempInst;
+}
+
+void SynacorVM::updateInput(const QString &input)
+{
+	if (input.length() == 0)
+	{
+		assert(0 && "Empty String submitted");
+		return;
+	}
+
+	bufferedInput += input;
+	if (state == VMS_AWAITING_INPUT)
+	{
+		state = VMS_RUNNING;
 	}
 }
 
 void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 {
+	if (!loaded)
+	{
+		//No need to throw an error right now - it's being handled by earlier processes
+		assert(0 && "Tried to getAssembly without loading data");
+		return;
+	}
+
 	for (uint16_t i = 0; i < c_dwAddressSpace;)
 	{
 		const uint16_t op = memory[i++];

@@ -22,6 +22,8 @@ protected:
 	QStringList instr;
 	QStringList args;
 	QList<int> instrNum;
+
+	bool loaded;
 };
 
 #endif // ASSEMBLY_WIDGET_H_

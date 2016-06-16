@@ -2,13 +2,16 @@
 #include "OutputWidget.h"
 #include "MemoryWidget.h"
 #include "AssemblyWidget.h"
-#include "SynacorVM.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
+#include <QTimer>
+#include <QApplication>
+
+#include <QMessageBox>
 
 #include <iostream>
 #include <fstream>
@@ -39,6 +42,13 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	connect(synacorVM, SIGNAL(print(const QString&)), outputWidget, SLOT(print(const QString&)));
 	connect(synacorVM, SIGNAL(clear()), outputWidget, SLOT(clear()));
+	connect(synacorVM, SIGNAL(throwError(VMErrors)), this, SLOT(notifyError(VMErrors)));
+
+	connect(outputWidget, SIGNAL(submitInput(const QString&)), synacorVM, SLOT(updateInput(const QString&)));
+
+	QTimer *timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), synacorVM, SLOT(update()));
+	timer->start(10);
 }
 
 void SourceDebugger::load()
@@ -80,4 +90,52 @@ void SourceDebugger::reduce()
 void SourceDebugger::run()
 {
 	synacorVM->run();
+}
+
+void SourceDebugger::exit()
+{
+	QApplication::quit();
+}
+
+void SourceDebugger::notifyError(VMErrors error)
+{
+	switch (error)
+	{
+	case VME_RUN_NO_FILE_LOADED:
+	{
+		QMessageBox::warning(this,
+			QString("Run Error"),
+			QString("You cannot run the program until you load a binary file."));
+		break;
+	}
+	case VME_RESET_NO_FILE_LOADED:
+	{
+		QMessageBox::warning(this,
+			QString("Reset Error"),
+			QString("You cannot reset the program until you load a binary file."));
+		break;
+	}
+	default:
+	{
+		QMessageBox::warning(this,
+			QString("Error Error"),
+			QString("This error message has not been implemented.  Error Code: %1").arg(error));
+		break;
+	}
+	}
+}
+
+void SourceDebugger::reset()
+{
+	synacorVM->reset();
+	outputWidget->clear();
+
+	QStringList instr, args;
+
+	synacorVM->getAssembly(instr, args);
+
+	if (instr.length() != 0)
+	{
+		assemblyWidget->setAssembly(instr, args);
+	}
 }

@@ -1,7 +1,9 @@
 #ifndef SOURCE_DEBUGGER_H_
 #define SOURCE_DEBUGGER_H_
 
-#include <qwidget.h>
+#include "SynacorVM.h"
+
+#include <QWidget>
 #include <vector>
 
 QT_BEGIN_NAMESPACE
@@ -12,7 +14,6 @@ QT_END_NAMESPACE
 class OutputWidget;
 class MemoryWidget;
 class AssemblyWidget;
-class SynacorVM;
 
 
 class SourceDebugger : public QWidget
@@ -24,7 +25,10 @@ public:
 public slots:
 	void load();
 	void reduce();
+	void reset();
 	void run();
+	void exit();
+	void notifyError(VMErrors error);
 
 protected:
 	OutputWidget *outputWidget;
