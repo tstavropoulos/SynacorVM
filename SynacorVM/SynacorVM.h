@@ -12,16 +12,16 @@ class SynacorVM : public QObject
 	Q_OBJECT
 public:
 	SynacorVM();
-	void load(const uint16_t* buffer);
+	void load(const std::vector<uint16_t> &buffer);
 
 	void getAssembly (QStringList &instr, QStringList &args);
+	void run();
 
 protected:
 	QString StringTranslate(uint16_t value);
 	QString StringTranslateChar(uint16_t value);
 	uint16_t Translate(uint16_t value);
 	void Write(uint16_t address, uint16_t value);
-	void run();
 
 	std::vector<uint16_t> memory;
 	std::vector<uint16_t> registers;

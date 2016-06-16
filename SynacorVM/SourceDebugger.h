@@ -24,6 +24,7 @@ public:
 public slots:
 	void load();
 	void reduce();
+	void run();
 
 protected:
 	OutputWidget *outputWidget;

@@ -10,6 +10,9 @@
 #include <QFile>
 #include <QFileDialog>
 
+#include <iostream>
+#include <fstream>
+
 
 SourceDebugger::SourceDebugger(QWidget *parent)
 	: QWidget(parent)//, memory(c_dwAddressSpace)
@@ -44,46 +47,37 @@ void SourceDebugger::load()
 
 	if (!filepath.isEmpty())
 	{
-		QFile file(filepath);
 
-		if (!file.open(QIODevice::ReadOnly))
+		std::ifstream in(filepath.toStdString(), std::ifstream::in | std::ifstream::binary);
+		if (!in.good())
 		{
-			qDebug() << "Cound not open file (reading).";
+			std::cout << "Failed to open file: " << filepath.toStdString() << std::endl;
 			return;
 		}
 
-		const qint64 bufferSize = c_dwAddressSpace * (sizeof(uint16_t) / sizeof(char));
-		//char tempMemory[bufferSize];
-		
-		QByteArray blob = file.readAll();
-		
+		std::vector<uint16_t> memory(c_dwAddressSpace);
 
-		uint16_t tempMemory[c_dwAddressSpace];
-
-		for (int i = 0; i < c_dwAddressSpace && 2*i+1 < blob.length(); i++)
+		size_t dwCurOffset = 0;
+		while (in.good())
 		{
-			tempMemory[i] = blob[2*i+1] << 8 | blob[2*i];
+			in.read((char *)&memory[dwCurOffset++], sizeof(uint16_t));
 		}
 		
-		/*
-		//handle file here
-		if (!file.read(tempMemory, bufferSize))
-		{
-			qDebug() << "Read appears to have failed.";
-		}
-		*/
-		synacorVM->load(tempMemory);
+		synacorVM->load(memory);
 
 		QStringList instr, args;
 
 		synacorVM->getAssembly(instr, args);
 		assemblyWidget->setAssembly(instr, args);
-
-		file.close();
 	}
 }
 
 void SourceDebugger::reduce()
 {
 	assemblyWidget->reduce();
+}
+
+void SourceDebugger::run()
+{
+	synacorVM->run();
 }

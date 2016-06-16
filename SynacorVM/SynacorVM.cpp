@@ -3,7 +3,6 @@
 #include "SynacorVM.h"
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <memory>
@@ -78,9 +77,9 @@ void SynacorVM::Write(uint16_t address, uint16_t value)
 	}
 }
 
-void SynacorVM::load(const uint16_t* buffer)
+void SynacorVM::load(const std::vector<uint16_t> &buffer)
 {
-	memory.insert(memory.end(), &buffer[0], &buffer[c_dwAddressSpace]);
+	memory = std::vector<uint16_t>(buffer);
 }
 
 void SynacorVM::run()

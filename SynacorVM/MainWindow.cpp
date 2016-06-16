@@ -34,9 +34,16 @@ void MainWindow::createMenus()
     fileMenu->addAction(loadAction);
     connect(loadAction, SIGNAL(triggered()), sourceDebugger_, SLOT(load()));
 
-	QAction *reduceAction = new QAction("&Reduce", this);
+	QAction *reduceAction = new QAction("R&educe", this);
 	fileMenu->addAction(reduceAction);
 	connect(reduceAction, SIGNAL(triggered()), sourceDebugger_, SLOT(reduce()));
+
+	QAction *runAction = new QAction("&Run", this);
+	fileMenu->addAction(runAction);
+	connect(runAction, SIGNAL(triggered()), sourceDebugger_, SLOT(run()));
+
+
+
 	/*
     QAction *downloadAction = new QAction("&Download", this);
     fileMenu->addAction(downloadAction);
