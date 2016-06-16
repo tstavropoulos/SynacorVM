@@ -29,25 +29,13 @@ popd
 pushd %SD_TREE%
 
 @echo Getting Qt libraries
-@ROBOCOPY %QTDIR%\bin %SD_TREE%\output\bin\release Qt*Core.dll Qt*Gui.dll Qt*Xml.dll Qt*Sql.dll Qt*Widgets.dll Qt*Test.dll Qt*WinExtras.dll libGLESv2.dll libEGL.dll /NFL /NDL /NJH /NJS 1> nul
+@ROBOCOPY %QTDIR%\bin %SD_TREE%\output\bin\release Qt5Core.dll Qt5Gui.dll Qt5Widgets.dll Qt5WinExtras.dll /NFL /NDL /NJH /NJS 1> nul
 
-@ROBOCOPY %QTDIR%\bin %SD_TREE%\output\bin\debug Qt*Cored.dll Qt*Guid.dll Qt*Xmld.dll Qt*Sqld.dll Qt*Widgetsd.dll Qt*Testd.dll Qt*WinExtrasd.dll libGLESv2d.dll libEGLd.dll Qt*Cored.pdb Qt*Guid.pdb Qt*Xmld.pdb Qt*Sqld.pdb Qt*Widgetsd.pdb Qt*Testd.pdb Qt*WinExtrasd.pdb libGLESv2d.pdb libEGLd.pdb /NFL /NDL /NJH /NJS 1> nul
-
-@ROBOCOPY %QTDIR%\bin %SD_TREE%\output\bin\release icuin*.dll icuuc*.dll icudt*.dll D3DCompiler_43.dll /NFL /NDL /NJH /NJS 1> nul
-
-@ROBOCOPY %QTDIR%\bin %SD_TREE%\output\bin\debug icuin*.dll icuuc*.dll icudt*.dll D3DCompiler_43.dll /NFL /NDL /NJH /NJS 1> nul
+@ROBOCOPY %QTDIR%\bin %SD_TREE%\output\bin\debug Qt5Cored.dll Qt5Guid.dll Qt5Widgetsd.dll Qt5WinExtrasd.dll Qt5Cored.pdb Qt5Guid.pdb Qt5Widgetsd.pdb Qt5WinExtrasd.pdb /NFL /NDL /NJH /NJS 1> nul
 
 @ROBOCOPY %QTDIR%\plugins\platforms %SD_TREE%\output\bin\release\platforms qwindows.dll /NFL /NDL /NJH /NJS 1> nul
 
 @ROBOCOPY %QTDIR%\plugins\platforms %SD_TREE%\output\bin\debug\platforms qwindowsd.dll /NFL /NDL /NJH /NJS 1> nul
-
-@ROBOCOPY %QTDIR%\plugins\sqldrivers %SD_TREE%\output\bin\release\sqldrivers qsqlite.dll /NFL /NDL /NJH /NJS 1> nul
-
-@ROBOCOPY %QTDIR%\plugins\sqldrivers %SD_TREE%\output\bin\debug\sqldrivers qsqlited.dll /NFL /NDL /NJH /NJS 1> nul
-
-@ROBOCOPY %QTDIR%\plugins\imageformats %SD_TREE%\output\bin\release\imageformats qico.dll /NFL /NDL /NJH /NJS 1> nul
-
-@ROBOCOPY %QTDIR%\plugins\imageformats %SD_TREE%\output\bin\debug\imageformats qicod.dll /NFL /NDL /NJH /NJS 1> nul
 
 @popd
 @ENDLOCAL
