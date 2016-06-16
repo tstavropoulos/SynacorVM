@@ -5,6 +5,7 @@
 
 QT_BEGIN_NAMESPACE
 class QListView;
+class QStringListModel;
 QT_END_NAMESPACE
 
 class OutputWidget : public QWidget
@@ -15,6 +16,8 @@ public:
 
 protected:
 	QListView *listView;
+	QStringList output;
+	QStringListModel *listModel;
 
 public slots:
 	void print(const QString &line);
