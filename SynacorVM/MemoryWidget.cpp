@@ -223,7 +223,7 @@ void MemoryWidget::refreshView(MemoryModule module)
 		stack.clear();
 		for (auto itr = rawStack.rbegin(); itr != rawStack.rend(); itr++)
 		{
-			stack.push_front(QString("%1").arg(*itr, 4, 16, QChar('0')));
+			stack.push_back(QString("%1").arg(*itr, 4, 16, QChar('0')));
 		}
 		stackModel->setStringList(stack);
 		break;
@@ -238,7 +238,7 @@ void MemoryWidget::refreshView(MemoryModule module)
 		callstack.clear();
 		for (auto itr = rawCallstack.rbegin(); itr != rawCallstack.rend(); itr++)
 		{
-			callstack.push_front(QString("%1").arg(*itr, 4, 16, QChar('0')));
+			callstack.push_back(QString("%1").arg(*itr, 4, 16, QChar('0')));
 		}
 		callstackModel->setStringList(callstack);
 		break;
