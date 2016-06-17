@@ -42,6 +42,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	connect(reduceAction, SIGNAL(triggered()), this, SLOT(reduce()));
 
 	QAction *resetAction = new QAction("Re&set", this);
+	resetAction->setIcon(QIcon(":/Reset.png"));
 	toolbar->addAction(resetAction);
 	connect(resetAction, SIGNAL(triggered()), this, SLOT(reset()));
 
@@ -49,16 +50,19 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 
 	runAction = new QAction("Run", this);
+	runAction->setIcon(QIcon(":/Play.png"));
 	toolbutton = new QToolButton();
 	toolbutton->setDefaultAction(runAction);
 	toolbar->addWidget(toolbutton);
 	connect(runAction, SIGNAL(triggered()), this, SLOT(resume()));
 
 	QAction *stepIntoAction = new QAction("Step &Into", this);
+	stepIntoAction->setIcon(QIcon(":/StepInto.png"));
 	toolbar->addAction(stepIntoAction);
 	connect(stepIntoAction, SIGNAL(triggered()), this, SLOT(stepInto()));
 
 	QAction *stepOverAction = new QAction("Step &Over", this);
+	stepOverAction->setIcon(QIcon(":/StepOver.png"));
 	toolbar->addAction(stepOverAction);
 	connect(stepOverAction, SIGNAL(triggered()), this, SLOT(stepOver()));
 
@@ -246,15 +250,19 @@ void SourceDebugger::updateDebuggerState(DebuggerState dState)
 	case DS_NOT_RUN:
 		runAction->setDisabled(false);
 		runAction->setText("&Run");
+		runAction->setIcon(QIcon(":/Play.png"));
 		break;
 	case DS_PAUSED:
 		runAction->setText("&Resume");
+		runAction->setIcon(QIcon(":/Play.png"));
 		break;
 	case DS_RUNNING:
 		runAction->setText("&Pause");
+		runAction->setIcon(QIcon(":/Pause.png"));
 		break;
 	case DS_HALTED:
 		runAction->setText("&Run");
+		runAction->setIcon(QIcon(":/Play.png"));
 		runAction->setDisabled(true);
 		break;
 	}

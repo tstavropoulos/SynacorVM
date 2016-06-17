@@ -8,12 +8,21 @@
 #include <QMenuBar>
 #include <QAction>
 #include <QActionGroup>
+#include <QFile>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
     sourceDebugger_ = new SourceDebugger(this);
     setCentralWidget(sourceDebugger_);
+
+	//Load Stylesheet
+	QFile styleFile(":/DarkTheme.qss");
+	styleFile.open(QFile::ReadOnly);
+
+	//Apply the loaded stylesheet
+	QString style(styleFile.readAll());
+	qApp->setStyleSheet(style);
 
     setWindowTitle(tr("SynacorDebugger"));
 

@@ -1,0 +1,112 @@
+
+QWidget {
+	background: #4E4E4E;
+	border-color: darkgray;
+	color: lightgray;
+}
+
+QMenuBar {
+	font: large "Consolas";
+	font-size: 12pt;
+	border-bottom: 1px solid #1E1E1E;
+	background-color: #4E4E4E;
+}
+
+QMenuBar::item {
+	background-color: #4E4E4E;
+}
+
+QMenuBar::item:selected {
+	font: large "Consolas";
+	font-size: 10pt;
+	background-color: blue;
+	color: white;
+}
+
+QMenu {
+	font: large "Consolas";
+	font-size: 10pt;
+	background-color: #4E4E4E;
+	border: 1px solid gray;
+	color: white;
+}
+
+QMenu::item:selected {
+	background-color: blue;
+	color: white;
+}
+
+QLabel {
+	font: bold large "Consolas";
+	font-size: 12pt;
+	qproperty-alignment: AlignCenter;
+	color: white;
+	background: #4E4E4E;
+}
+
+QListView {
+	background: #1E1E1E;
+}
+
+QLineEdit {
+	font: bold large "Consolas";
+	font-size: 12pt;
+	border: 1px solid darkgray;
+	background-color: #1E1E1E;
+}
+
+QLineEdit:hover {
+	border: 1px solid lightgray;
+	background-color: #1E1E1E;
+}
+
+QToolbar {
+	font: bold large "Consolas";
+	font-size: 10pt;
+}
+
+QToolButton {
+	font: bold large "Consolas";
+	font-size: 10pt;
+}
+
+QTabWidget::pane {
+	font: bold large "Consolas";
+	font-size: 12pt;
+	border: 1px solid white;
+}
+
+QTabBar {
+	font: bold large "Consolas";
+	font-size: 12pt;
+	color: white;
+}
+
+QTabBar::tab {
+	font: bold large "Consolas";
+	font-size: 12pt;
+	background-color: #2E2E2E;
+	border: 1px solid lightgray;
+	color: white;
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+
+QTabBar::tab:selected {
+    border-color: lightgray;
+	background-color: #4E4E4E;
+    border-bottom-color: #4E4E4E;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px;
+}
+
+QPushButton {
+	font: large "Consolas";
+	font-size: 10pt;
+	background-color: #4E4E4E;
+	border: 1px solid gray;
+	color: white;
+}

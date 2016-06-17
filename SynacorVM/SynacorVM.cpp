@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include <QCoreApplication>
+#include <QThread>
 
 #define VERBOSE_PRINTS 0
 
@@ -120,6 +121,7 @@ void SynacorVM::updateForever()
 		{
 			execCounter = 0;
 			QCoreApplication::processEvents();
+			QThread::yieldCurrentThread();
 		}
 	}
 }
