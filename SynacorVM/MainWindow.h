@@ -26,6 +26,9 @@ private:
 	void createMenus();
 	QMenu *fileMenu;
 	QMenu *styleMenu;
+
+signals:
+	void aboutToQuit();
 };
 
 #endif // MAIN_WINDOW_H_

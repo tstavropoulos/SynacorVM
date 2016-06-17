@@ -30,12 +30,13 @@ class SynacorVM : public QObject
 {
 	Q_OBJECT
 public:
-	SynacorVM();
+	SynacorVM(QObject *parent);
 	void load(const std::vector<uint16_t> &buffer);
 
 	void getAssembly (QStringList &instr, QStringList &args, std::vector<uint16_t> &instrNum);
 	void run();
 
+	void updateForever();
 protected:
 	QString StringTranslate(uint16_t value);
 	QString StringTranslateChar(uint16_t value);
@@ -54,12 +55,11 @@ protected:
 	uint16_t inst;
 
 	bool loaded;
+	bool quitting;
 
 	QString bufferedInput;
 
 	VMState state;
-
-	int executionsPerUpdate;
 
 	int numReturnsUntilStepOverEnds;
 	bool ignoreNextBreakpoint;
@@ -68,10 +68,11 @@ public slots:
 	//System Slots
 	void reset();
 	void pause(bool pause);
-	void update();
+	void updateExec();
 	void updateInput(const QString &input);
 	void stepInto();
 	void stepOver();
+	void aboutToQuit();
 
 	//Memory Slots
 	void changeMemory(uint16_t address, uint16_t value);

@@ -11,15 +11,16 @@
 
 #define VERBOSE_PRINTS 0
 
-SynacorVM::SynacorVM()
-	: registers(c_dwNumRegisters)
+SynacorVM::SynacorVM(QObject *parent)
+	: QObject(parent)
+	, registers(c_dwNumRegisters)
 	, breakpoints(c_dwAddressSpace)
 	, inst(0)
 	, state(VMS_HALTED)
-	, executionsPerUpdate(1000)
 	, loaded(false)
 	, numReturnsUntilStepOverEnds(0)
 	, ignoreNextBreakpoint(false)
+	, quitting(false)
 {
 
 }
@@ -103,6 +104,19 @@ void SynacorVM::reset()
 	memory = startMemoryBU;
 	bufferedInput = QString();
 	//breakpoints = std::vector<bool>(c_dwAddressSpace);
+}
+
+void SynacorVM::updateForever()
+{
+	while (!quitting)
+	{
+		updateExec();
+	}
+}
+
+void SynacorVM::aboutToQuit()
+{
+	quitting = true;
 }
 
 void SynacorVM::run()
@@ -192,7 +206,7 @@ static bool IsRunningState(VMState state)
 	return state == VMS_RUNNING || state == VMS_STEP_INTO || state == VMS_STEP_OVER;
 }
 
-void SynacorVM::update()
+void SynacorVM::updateExec()
 {
 	switch (state)
 	{
@@ -206,8 +220,7 @@ void SynacorVM::update()
 	case VMS_STEP_INTO:
 	case VMS_STEP_OVER:
 	{
-		int executionCount = executionsPerUpdate;
-		while (IsRunningState(state) && executionCount-- > 0)
+		if (IsRunningState(state))
 		{
 			if (breakpoints[inst] && !ignoreNextBreakpoint)
 			{

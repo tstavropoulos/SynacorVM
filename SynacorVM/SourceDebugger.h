@@ -36,6 +36,9 @@ public slots:
 	void stepInto();
 	void stepOver();
 
+signals:
+	void aboutToQuit();
+
 protected:
 	OutputWidget *outputWidget;
 	MemoryWidget *memoryWidget;

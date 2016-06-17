@@ -16,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     createMenus();
 
+	connect(this, SIGNAL(aboutToQuit()), sourceDebugger_, SIGNAL(aboutToQuit()));
+
     resize(1600, 800);
 }
 

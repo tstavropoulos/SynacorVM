@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QApplication>
+#include <QtConcurrent>
 
 #include <QMessageBox>
 
@@ -38,7 +39,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	setLayout(mainLayout);
 
-	synacorVM = new SynacorVM();
+	synacorVM = new SynacorVM(this);
 
 	//Connect signals from Assembly Widget to VM
 	connect(assemblyWidget, SIGNAL(setBreakpoint(uint16_t, bool)), synacorVM, SLOT(setBreakpoint(uint16_t, bool)));
@@ -48,6 +49,9 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	//Connect signals from VM to UI
 	connect(synacorVM, SIGNAL(throwError(VMErrors)), this, SLOT(notifyError(VMErrors)));
+
+	//Connect signals from UI to VM
+	connect(this, SIGNAL(aboutToQuit()), synacorVM, SLOT(aboutToQuit()));
 
 	//Connect signals from VM to Output Widget
 	connect(synacorVM, SIGNAL(print(const QString&)), outputWidget, SLOT(print(const QString&)));
@@ -75,9 +79,11 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	connect(memoryWidget, SIGNAL(scrollToInstruction(uint16_t)), assemblyWidget, SLOT(scrollToInstruction(uint16_t)));
 
 	//Timer for triggering VM updates
-	QTimer *VMTtimer = new QTimer(this);
-	connect(VMTtimer, SIGNAL(timeout()), synacorVM, SLOT(update()));
-	VMTtimer->start(10);
+	//QTimer *VMTtimer = new QTimer(this);
+	//connect(VMTtimer, SIGNAL(timeout()), synacorVM, SLOT(updateExec()));
+	//VMTtimer->start(10);
+
+	QFuture<void> future = QtConcurrent::run(QThreadPool::globalInstance(), synacorVM, &SynacorVM::updateForever);
 
 	//Timer for triggering UI updates of the Memory Widget
 	QTimer *memoryTimer = new QTimer(this);
