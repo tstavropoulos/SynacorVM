@@ -53,6 +53,8 @@ protected:
 	std::vector<uint16_t> rawStack;
 	std::vector<uint16_t> rawCallstack;
 
+	uint16_t inst;
+
 public slots:
 	//VM Slots
 	void updateMemory(uint16_t address, uint16_t value);
@@ -61,6 +63,7 @@ public slots:
 	void popStack();
 	void pushCallstack(uint16_t value);
 	void popCallstack();
+	void updatePointer(uint16_t address);
 
 	//System Slots
 	void reset();

@@ -130,6 +130,14 @@ void MemoryWidget::reset()
 	refreshView(MM_CALLSTACK);
 }
 
+void MemoryWidget::updatePointer(uint16_t address)
+{
+	inst = address;
+
+	//Time to update our memory
+	update();
+}
+
 void MemoryWidget::update()
 {
 	for (auto itr = pendingMemoryUpdates.begin(); itr != pendingMemoryUpdates.end(); itr++)

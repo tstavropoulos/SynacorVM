@@ -67,6 +67,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	connect(synacorVM, SIGNAL(popStack()), memoryWidget, SLOT(popStack()));
 	connect(synacorVM, SIGNAL(pushCallstack(uint16_t)), memoryWidget, SLOT(pushCallstack(uint16_t)));
 	connect(synacorVM, SIGNAL(popCallstack()), memoryWidget, SLOT(popCallstack()));
+	connect(synacorVM, SIGNAL(updatePointer(uint16_t)), memoryWidget, SLOT(updatePointer(uint16_t)));
 
 	//Connect signals from Memory Widget for modifying VM
 	connect(memoryWidget, SIGNAL(changeMemory(uint16_t, uint16_t)), synacorVM, SLOT(changeMemory(uint16_t, uint16_t)));
@@ -78,19 +79,8 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	// Connect signals from Memory Widget to Assembly Widget
 	connect(memoryWidget, SIGNAL(scrollToInstruction(uint16_t)), assemblyWidget, SLOT(scrollToInstruction(uint16_t)));
 
-	//Timer for triggering VM updates
-	//QTimer *VMTtimer = new QTimer(this);
-	//connect(VMTtimer, SIGNAL(timeout()), synacorVM, SLOT(updateExec()));
-	//VMTtimer->start(10);
-
+	//Run our VM updates endlessly
 	QFuture<void> future = QtConcurrent::run(QThreadPool::globalInstance(), synacorVM, &SynacorVM::updateForever);
-
-	//Timer for triggering UI updates of the Memory Widget
-	QTimer *memoryTimer = new QTimer(this);
-	connect(memoryTimer, SIGNAL(timeout()), memoryWidget, SLOT(update()));
-	memoryTimer->start(1000);
-
-
 }
 
 void SourceDebugger::load()
