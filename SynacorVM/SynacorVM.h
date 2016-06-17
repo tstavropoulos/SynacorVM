@@ -18,6 +18,16 @@ enum VMState
 	VMS_MAX
 };
 
+//Used so the Debugger can know what to call it's run button
+enum DebuggerState
+{
+	DS_NOT_RUN = 0,
+	DS_RUNNING,
+	DS_PAUSED,
+	DS_HALTED,
+	DS_MAX
+};
+
 enum VMErrors
 {
 	VME_RUN_NO_FILE_LOADED = 0,
@@ -34,9 +44,9 @@ public:
 	void load(const std::vector<uint16_t> &buffer);
 
 	void getAssembly (QStringList &instr, QStringList &args, std::vector<uint16_t> &instrNum);
-	void run();
 
 	void updateForever();
+
 protected:
 	QString StringTranslate(uint16_t value);
 	QString StringTranslateChar(uint16_t value);
@@ -56,6 +66,7 @@ protected:
 
 	bool loaded;
 	bool quitting;
+	bool started;
 
 	QString bufferedInput;
 
@@ -92,6 +103,7 @@ signals:
 
 	//UI Signals
 	void throwError(VMErrors error);
+	void newDebuggerState(DebuggerState dState);
 
 	//Memory Signals
 	void updateMemory(uint16_t address, uint16_t value);
@@ -100,6 +112,7 @@ signals:
 	void popStack();
 	void pushCallstack(uint16_t value);
 	void popCallstack();
+
 
 	//Assembly Signals
 	void updatePointer(uint16_t address);

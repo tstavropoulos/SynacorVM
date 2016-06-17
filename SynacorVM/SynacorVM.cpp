@@ -21,6 +21,7 @@ SynacorVM::SynacorVM(QObject *parent)
 	, numReturnsUntilStepOverEnds(0)
 	, ignoreNextBreakpoint(false)
 	, quitting(false)
+	, started(false)
 {
 
 }
@@ -100,10 +101,12 @@ void SynacorVM::reset()
 
 	inst = 0;
 	state = VMS_BREAK;
+	emit newDebuggerState(DS_NOT_RUN);
 	emit updatePointer(inst);
 	memory = startMemoryBU;
+	registers = std::vector<uint16_t>(c_dwNumRegisters);
 	bufferedInput = QString();
-	//breakpoints = std::vector<bool>(c_dwAddressSpace);
+	started = false;
 }
 
 void SynacorVM::updateForever()
@@ -119,18 +122,6 @@ void SynacorVM::aboutToQuit()
 	quitting = true;
 }
 
-void SynacorVM::run()
-{
-	if (!loaded)
-	{
-		emit throwError(VME_RUN_NO_FILE_LOADED);
-		return;
-	}
-
-	reset();
-	state = VMS_RUNNING;
-}
-
 void SynacorVM::pause(bool pause)
 {
 	switch (state)
@@ -143,7 +134,11 @@ void SynacorVM::pause(bool pause)
 	}
 	case VMS_BREAK:
 	{
+		//Update started if it's false and we're unpausing
+		started |= !pause;
+
 		state = pause ? VMS_BREAK : VMS_RUNNING;
+		emit newDebuggerState(pause ? DS_PAUSED : DS_RUNNING);
 		if (!pause && breakpoints[inst])
 		{
 			ignoreNextBreakpoint = true;
@@ -199,6 +194,7 @@ void SynacorVM::load(const std::vector<uint16_t> &buffer)
 	startMemoryBU = std::vector<uint16_t>(buffer);
 
 	loaded = true;
+	reset();
 }
 
 static bool IsRunningState(VMState state)
@@ -225,6 +221,7 @@ void SynacorVM::updateExec()
 			if (breakpoints[inst] && !ignoreNextBreakpoint)
 			{
 				emit updatePointer(inst);
+				emit newDebuggerState(DS_PAUSED);
 				state = VMS_BREAK;
 				break;
 			}
@@ -265,6 +262,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		std::cout << "[" << tempInst - 1 << "]" << "HALT" << std::endl;
 #endif
 		state = VMS_HALTED;
+		emit newDebuggerState(DS_HALTED);
 		emit updatePointer(opAddress);
 		break;
 	}
@@ -530,6 +528,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		{
 			emit updatePointer(opAddress);
 			state = VMS_HALTED;
+			emit newDebuggerState(DS_HALTED);
 		}
 		else
 		{
@@ -613,6 +612,7 @@ void SynacorVM::updateInput(const QString &input)
 	if (state == VMS_AWAITING_INPUT)
 	{
 		state = VMS_RUNNING;
+		emit newDebuggerState(DS_RUNNING);
 	}
 }
 

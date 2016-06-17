@@ -9,6 +9,8 @@
 QT_BEGIN_NAMESPACE
 class QListView;
 class QFileDialog;
+class QToolBar;
+class QToolButton;
 QT_END_NAMESPACE
 
 class OutputWidget;
@@ -29,13 +31,14 @@ public slots:
 	void reduce();
 	void reset();
 	void refreshAssembly();
-	void run();
 	void exit();
 	void notifyError(VMErrors error);
 	void resume();
 	void pause();
 	void stepInto();
 	void stepOver();
+
+	void updateDebuggerState(DebuggerState dState);
 
 signals:
 	void aboutToQuit();
@@ -48,6 +51,12 @@ protected:
 	SynacorVM *synacorVM;
 
 	QFileDialog *fileDialog;
+
+	QAction *runAction;
+	QToolBar *toolbar;
+	QToolButton *toolbutton;
+
+	DebuggerState DState;
 
 };
 

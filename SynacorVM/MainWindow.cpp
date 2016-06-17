@@ -39,7 +39,7 @@ void MainWindow::createMenus()
 	QAction *runAction = new QAction("&Run", this);
 	runAction->setShortcut(QKeySequence(tr("Ctrl+R", "File|&Run")));
 	fileMenu->addAction(runAction);
-	connect(runAction, SIGNAL(triggered()), sourceDebugger_, SLOT(run()));
+	connect(runAction, SIGNAL(triggered()), sourceDebugger_, SLOT(resume()));
 
 	QAction *resetAction = new QAction("Re&set", this);
 	fileMenu->addAction(resetAction);

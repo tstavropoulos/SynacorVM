@@ -12,6 +12,7 @@
 #include <QApplication>
 #include <QtConcurrent>
 #include <QToolBar>
+#include <QToolButton>
 
 #include <QMessageBox>
 
@@ -21,10 +22,11 @@
 
 SourceDebugger::SourceDebugger(QWidget *parent)
 	: QWidget(parent)
+	, DState(DS_NOT_RUN)
 {
 	setObjectName("mainWidget");
 
-	QToolBar *toolbar = new QToolBar(this);
+	toolbar = new QToolBar(this);
 
 	QAction *loadAction = new QAction("&Open", this);
 	toolbar->addAction(loadAction);
@@ -36,23 +38,18 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	toolbar->addAction(reduceAction);
 	connect(reduceAction, SIGNAL(triggered()), this, SLOT(reduce()));
 
-	QAction *runAction = new QAction("&Run", this);
-	toolbar->addAction(runAction);
-	connect(runAction, SIGNAL(triggered()), this, SLOT(run()));
-
 	QAction *resetAction = new QAction("Re&set", this);
 	toolbar->addAction(resetAction);
 	connect(resetAction, SIGNAL(triggered()), this, SLOT(reset()));
 
 	toolbar->addSeparator();
 
-	QAction *pauseAction = new QAction("&Pause", this);
-	toolbar->addAction(pauseAction);
-	connect(pauseAction, SIGNAL(triggered()), this, SLOT(pause()));
 
-	QAction *resumeAction = new QAction("Res&ume", this);
-	toolbar->addAction(resumeAction);
-	connect(resumeAction, SIGNAL(triggered()), this, SLOT(resume()));
+	runAction = new QAction("Run", this);
+	toolbutton = new QToolButton();
+	toolbutton->setDefaultAction(runAction);
+	toolbar->addWidget(toolbutton);
+	connect(runAction, SIGNAL(triggered()), this, SLOT(resume()));
 
 	QAction *stepIntoAction = new QAction("Step &Into", this);
 	toolbar->addAction(stepIntoAction);
@@ -67,7 +64,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	superLayout->addWidget(toolbar);
 
-	QHBoxLayout *mainLayout = new QHBoxLayout(this);
+	QHBoxLayout *mainLayout = new QHBoxLayout();
 	superLayout->addLayout(mainLayout);
 
 	outputWidget = new OutputWidget(this);
@@ -75,7 +72,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	assemblyWidget = new AssemblyWidget(this);
 	memoryWidget = new MemoryWidget(this);
 
-	QVBoxLayout *rightSideLayout = new QVBoxLayout(this);
+	QVBoxLayout *rightSideLayout = new QVBoxLayout();
 	rightSideLayout->addWidget(assemblyWidget);
 	rightSideLayout->addWidget(memoryWidget);
 
@@ -94,6 +91,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	//Connect signals from VM to UI
 	connect(synacorVM, SIGNAL(throwError(VMErrors)), this, SLOT(notifyError(VMErrors)));
+	connect(synacorVM, SIGNAL(newDebuggerState(DebuggerState)), this, SLOT(updateDebuggerState(DebuggerState)));
 
 	//Connect signals from UI to VM
 	connect(this, SIGNAL(aboutToQuit()), synacorVM, SLOT(aboutToQuit()));
@@ -177,11 +175,6 @@ void SourceDebugger::reduce()
 	assemblyWidget->reduce();
 }
 
-void SourceDebugger::run()
-{
-	synacorVM->run();
-}
-
 void SourceDebugger::exit()
 {
 	QApplication::quit();
@@ -236,9 +229,50 @@ void SourceDebugger::refreshAssembly()
 	}
 }
 
+void SourceDebugger::updateDebuggerState(DebuggerState dState)
+{
+	if (dState == DState)
+	{
+		return;
+	}
+
+	DState = dState;
+
+	switch (DState)
+	{
+	case DS_NOT_RUN:
+		runAction->setDisabled(false);
+		runAction->setText("&Run");
+		break;
+	case DS_PAUSED:
+		runAction->setText("&Resume");
+		break;
+	case DS_RUNNING:
+		runAction->setText("&Pause");
+		break;
+	case DS_HALTED:
+		runAction->setText("&Run");
+		runAction->setDisabled(true);
+		break;
+	}
+	toolbutton->setDefaultAction(runAction);
+}
+
 void SourceDebugger::resume()
 {
-	synacorVM->pause(false);
+	switch (DState)
+	{
+	case DS_NOT_RUN:
+	case DS_PAUSED:
+		synacorVM->pause(false);
+		break;
+	case DS_RUNNING:
+		synacorVM->pause(false);
+		break;
+	case DS_HALTED:
+		//doNothing
+		break;
+	}
 }
 
 void SourceDebugger::pause()
