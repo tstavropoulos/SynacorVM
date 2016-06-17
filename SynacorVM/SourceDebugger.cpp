@@ -84,7 +84,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 void SourceDebugger::load()
 {
-	QString filepath = QFileDialog::getOpenFileName(this, QString("Select Synacor Binary File"));
+	QString filepath = QFileDialog::getOpenFileName(this, QString("Select Synacor Binary File"), QString(), QString("*.bin"));
 
 	loadfile(filepath);
 }
