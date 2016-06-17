@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QApplication>
 #include <QtConcurrent>
+#include <QToolBar>
 
 #include <QMessageBox>
 
@@ -23,21 +24,65 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 {
 	setObjectName("mainWidget");
 
+	QToolBar *toolbar = new QToolBar(this);
+
+	QAction *loadAction = new QAction("&Open", this);
+	toolbar->addAction(loadAction);
+	connect(loadAction, SIGNAL(triggered()), this, SLOT(load()));
+
+	toolbar->addSeparator();
+
+	QAction *reduceAction = new QAction("R&educe", this);
+	toolbar->addAction(reduceAction);
+	connect(reduceAction, SIGNAL(triggered()), this, SLOT(reduce()));
+
+	QAction *runAction = new QAction("&Run", this);
+	toolbar->addAction(runAction);
+	connect(runAction, SIGNAL(triggered()), this, SLOT(run()));
+
+	QAction *resetAction = new QAction("Re&set", this);
+	toolbar->addAction(resetAction);
+	connect(resetAction, SIGNAL(triggered()), this, SLOT(reset()));
+
+	toolbar->addSeparator();
+
+	QAction *pauseAction = new QAction("&Pause", this);
+	toolbar->addAction(pauseAction);
+	connect(pauseAction, SIGNAL(triggered()), this, SLOT(pause()));
+
+	QAction *resumeAction = new QAction("Res&ume", this);
+	toolbar->addAction(resumeAction);
+	connect(resumeAction, SIGNAL(triggered()), this, SLOT(resume()));
+
+	QAction *stepIntoAction = new QAction("Step &Into", this);
+	toolbar->addAction(stepIntoAction);
+	connect(stepIntoAction, SIGNAL(triggered()), this, SLOT(stepInto()));
+
+	QAction *stepOverAction = new QAction("Step &Over", this);
+	toolbar->addAction(stepOverAction);
+	connect(stepOverAction, SIGNAL(triggered()), this, SLOT(stepOver()));
+
+
+	QVBoxLayout *superLayout = new QVBoxLayout(this);
+
+	superLayout->addWidget(toolbar);
+
 	QHBoxLayout *mainLayout = new QHBoxLayout(this);
+	superLayout->addLayout(mainLayout);
 
 	outputWidget = new OutputWidget(this);
 
 	assemblyWidget = new AssemblyWidget(this);
 	memoryWidget = new MemoryWidget(this);
 
-	QVBoxLayout *rightSideLayout = new QVBoxLayout();
+	QVBoxLayout *rightSideLayout = new QVBoxLayout(this);
 	rightSideLayout->addWidget(assemblyWidget);
 	rightSideLayout->addWidget(memoryWidget);
 
 	mainLayout->addWidget(outputWidget);
 	mainLayout->addLayout(rightSideLayout);
 
-	setLayout(mainLayout);
+	setLayout(superLayout);
 
 	synacorVM = new SynacorVM(this);
 
