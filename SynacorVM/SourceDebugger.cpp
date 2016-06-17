@@ -61,6 +61,8 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	connect(synacorVM, SIGNAL(updateRegister(uint16_t, uint16_t)), memoryWidget, SLOT(updateRegister(uint16_t, uint16_t)));
 	connect(synacorVM, SIGNAL(pushStack(uint16_t)), memoryWidget, SLOT(pushStack(uint16_t)));
 	connect(synacorVM, SIGNAL(popStack()), memoryWidget, SLOT(popStack()));
+	connect(synacorVM, SIGNAL(pushCallstack(uint16_t)), memoryWidget, SLOT(pushCallstack(uint16_t)));
+	connect(synacorVM, SIGNAL(popCallstack()), memoryWidget, SLOT(popCallstack()));
 
 	//Connect signals from Memory Widget for modifying VM
 	connect(memoryWidget, SIGNAL(changeMemory(uint16_t, uint16_t)), synacorVM, SLOT(changeMemory(uint16_t, uint16_t)));
@@ -68,6 +70,9 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	connect(memoryWidget, SIGNAL(changeStackPush(uint16_t)), synacorVM, SLOT(changeStackPush(uint16_t)));
 	connect(memoryWidget, SIGNAL(changeStackPop()), synacorVM, SLOT(changeStackPop()));
 	connect(memoryWidget, SIGNAL(changeStackModify(uint16_t, uint16_t)), synacorVM, SLOT(changeStackModify(uint16_t, uint16_t)));
+
+	// Connect signals from Memory Widget to Assembly Widget
+	connect(memoryWidget, SIGNAL(scrollToInstruction(uint16_t)), assemblyWidget, SLOT(scrollToInstruction(uint16_t)));
 
 	//Timer for triggering VM updates
 	QTimer *VMTtimer = new QTimer(this);

@@ -249,3 +249,12 @@ void AssemblyWidget::updatePointer(uint16_t address)
 	listView->scrollTo(index);
 	listView->setCurrentIndex(index);
 }
+
+void AssemblyWidget::scrollToInstruction(uint16_t address)
+{
+	auto iter = std::lower_bound(currentInstrAddress.begin(), currentInstrAddress.end(), address);
+	uint16_t instIndex = iter - currentInstrAddress.begin();
+	QModelIndex index = listModel->index(instIndex);
+	listView->scrollTo(index);
+	listView->setCurrentIndex(index);
+}

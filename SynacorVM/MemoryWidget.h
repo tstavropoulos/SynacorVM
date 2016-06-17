@@ -14,6 +14,7 @@ enum MemoryModule
 	MM_MEMORY = 0,
 	MM_REGISTERS,
 	MM_STACK,
+	MM_CALLSTACK,
 	MM_MAX
 };
 
@@ -35,15 +36,22 @@ protected:
 	QListView *memoryView;
 	QListView *registerView;
 	QListView *stackView;
+	QListView *callstackView;
 
 	QStringListModel *memoryModel;
 	QStringListModel *registerModel;
 	QStringListModel *stackModel;
+	QStringListModel *callstackModel;
 
 	QStringList startMemoryBU;
 	QStringList memory;
 	QStringList registers;
 	QStringList stack;
+	QStringList callstack;
+
+	std::map<uint16_t, uint16_t> pendingMemoryUpdates;
+	std::vector<uint16_t> rawStack;
+	std::vector<uint16_t> rawCallstack;
 
 public slots:
 	//VM Slots
@@ -51,10 +59,13 @@ public slots:
 	void updateRegister(uint16_t reg, uint16_t value);
 	void pushStack(uint16_t value);
 	void popStack();
+	void pushCallstack(uint16_t value);
+	void popCallstack();
 
 	//System Slots
 	void reset();
 	void update();
+	void callstackClicked(const QModelIndex &index);
 
 signals:
 	//VM Signals
@@ -63,6 +74,9 @@ signals:
 	void changeStackPush(uint16_t value);
 	void changeStackPop();
 	void changeStackModify(uint16_t index, uint16_t value);
+
+	// System Signals
+	void scrollToInstruction(uint16_t address);
 };
 
 #endif // MEMORY_WIDGET_H_

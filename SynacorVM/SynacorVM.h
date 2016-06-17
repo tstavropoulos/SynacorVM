@@ -97,6 +97,8 @@ signals:
 	void updateRegister(uint16_t reg, uint16_t value);
 	void pushStack(uint16_t value);
 	void popStack();
+	void pushCallstack(uint16_t value);
+	void popCallstack();
 
 	//Assembly Signals
 	void updatePointer(uint16_t address);

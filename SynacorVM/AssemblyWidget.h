@@ -45,6 +45,7 @@ protected:
 public slots:
 	void operationBreakToggled(const QModelIndex &index);
 	void updatePointer(uint16_t address);
+	void scrollToInstruction(uint16_t address);
 
 signals:
 	void setBreakpoint(uint16_t instr, bool set);

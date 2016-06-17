@@ -496,6 +496,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		const uint16_t a = Translate(memory[tempInst++]);
 		stack.push_back(tempInst);
 		emit pushStack(tempInst);
+		emit pushCallstack(tempInst);
 		tempInst = a;
 
 		if (state == VMS_STEP_OVER)
@@ -522,6 +523,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 			const uint16_t top = stack.back();
 			stack.pop_back();
 			emit popStack();
+			emit popCallstack();
 			tempInst = top;
 
 			if (state == VMS_STEP_OVER)
