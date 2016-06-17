@@ -558,6 +558,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 			const int16_t input = bufferedInput[0].toLatin1();
 			bufferedInput.remove(0, 1);
 			Write(a, input);
+			emit print(QString((char)input));
 		}
 		else
 		{
