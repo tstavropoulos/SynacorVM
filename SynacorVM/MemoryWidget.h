@@ -80,6 +80,7 @@ signals:
 
 	// System Signals
 	void scrollToInstruction(uint16_t address);
+	void refreshAssembly();
 };
 
 #endif // MEMORY_WIDGET_H_

@@ -124,6 +124,9 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	// Connect signals from Memory Widget to Assembly Widget
 	connect(memoryWidget, SIGNAL(scrollToInstruction(uint16_t)), assemblyWidget, SLOT(scrollToInstruction(uint16_t)));
 
+	// Connect signals from Memory Widget to UI
+	connect(memoryWidget, SIGNAL(refreshAssembly()), this, SLOT(refreshAssembly()));
+
 	//Run our VM updates endlessly
 	QFuture<void> future = QtConcurrent::run(QThreadPool::globalInstance(), synacorVM, &SynacorVM::updateForever);
 }
@@ -218,12 +221,15 @@ void SourceDebugger::reset()
 	outputWidget->clear();
 	memoryWidget->reset();
 
-	QStringList instr, args;
+	refreshAssembly();
+}
 
+void SourceDebugger::refreshAssembly()
+{
+	QStringList instr, args;
 	std::vector<uint16_t> instrNum;
 
 	synacorVM->getAssembly(instr, args, instrNum);
-
 	if (instr.length() != 0)
 	{
 		assemblyWidget->setAssembly(instr, args, instrNum);

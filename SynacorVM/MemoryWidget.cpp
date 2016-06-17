@@ -212,6 +212,7 @@ void MemoryWidget::refreshView(MemoryModule module)
 	case MM_MEMORY:
 	{
 		memoryModel->setStringList(memory);
+		emit refreshAssembly();
 		break;
 	}
 	case MM_STACK:

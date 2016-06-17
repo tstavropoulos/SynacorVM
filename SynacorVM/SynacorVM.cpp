@@ -544,7 +544,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 				if (--numReturnsUntilStepOverEnds == 0)
 				{
 					state = VMS_BREAK;
-					emit updatePointer(inst);
+					emit updatePointer(tempInst);
 				}
 			}
 			break;

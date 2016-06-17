@@ -28,6 +28,7 @@ public slots:
 	void load();
 	void reduce();
 	void reset();
+	void refreshAssembly();
 	void run();
 	void exit();
 	void notifyError(VMErrors error);

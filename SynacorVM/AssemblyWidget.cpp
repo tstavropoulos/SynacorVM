@@ -38,7 +38,10 @@ void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringL
 
 	loaded = true;
 
-	breakpoints = std::vector<bool>(instr.length());
+	if (breakpoints.size() != instr.length())
+	{
+		breakpoints = std::vector<bool>(instr.length());
+	}
 
 	rebuild();
 }
