@@ -1,13 +1,14 @@
-// SynacorVM.cpp : Defines the entry point for the console application.
-//
+#include "stdafx.h"
+
 #include "SynacorVM.h"
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <memory>
 #include <algorithm>
 #include <assert.h>
+
+#include <QCoreApplication>
 
 #define VERBOSE_PRINTS 0
 
@@ -111,9 +112,15 @@ void SynacorVM::reset()
 
 void SynacorVM::updateForever()
 {
+	int execCounter = 0;
 	while (!quitting)
 	{
 		updateExec();
+		if (++execCounter > 10)
+		{
+			execCounter = 0;
+			QCoreApplication::processEvents();
+		}
 	}
 }
 

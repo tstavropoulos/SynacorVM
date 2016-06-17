@@ -1,7 +1,13 @@
+#include "stdafx.h"
+
 #include "SourceDebugger.h"
+
 #include "OutputWidget.h"
 #include "MemoryWidget.h"
 #include "AssemblyWidget.h"
+
+#include <iostream>
+#include <fstream>
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -15,9 +21,6 @@
 #include <QToolButton>
 
 #include <QMessageBox>
-
-#include <iostream>
-#include <fstream>
 
 
 SourceDebugger::SourceDebugger(QWidget *parent)

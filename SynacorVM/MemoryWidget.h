@@ -15,7 +15,7 @@ enum MemoryModule
 	MM_REGISTERS,
 	MM_STACK,
 	MM_CALLSTACK,
-	MM_MAX
+	MM_MAX_ELEM
 };
 
 class MemoryWidget : public QWidget
@@ -31,7 +31,7 @@ protected:
 	void refreshView(MemoryModule module);
 	void flagDirty(MemoryModule module);
 
-	bool memoryDirty[MM_MAX];
+	bool memoryDirty[MM_MAX_ELEM];
 
 	QListView *memoryView;
 	QListView *registerView;

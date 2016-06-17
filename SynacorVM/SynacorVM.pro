@@ -11,7 +11,14 @@ INCLUDEPATH += .
 TARGET = Synacor
 TEMPLATE = app
 
+CONFIG += precompile_header
+
 SOURCES += main.cpp
+
+PRECOMPILED_HEADER = stdafx.h
+PRECOMPILED_SOURCE = stdafx.cpp
+
+HEADERS += stdafx.h
 
 HEADERS += MainWindow.h
 SOURCES += MainWindow.cpp
@@ -54,4 +61,4 @@ build_pass::CONFIG(debug, debug|release) {
 }
 
 CONFIG += embed_manifest_exe
-QMAKE_LFLAGS += /MACHINE:$$(SD_MACHINE_TYPE)
+QMAKE_LFLAGS += /MACHINE:X64

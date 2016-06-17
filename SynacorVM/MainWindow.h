@@ -25,7 +25,7 @@ private:
 
 	void createMenus();
 	QMenu *fileMenu;
-	QMenu *styleMenu;
+	QMenu *debugMenu;
 
 signals:
 	void aboutToQuit();

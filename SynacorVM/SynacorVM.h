@@ -1,9 +1,6 @@
 #ifndef SYNACOR_VM_H_
 #define SYNACOR_VM_H_
 
-#include <QObject>
-#include <vector>
-
 static const size_t c_dwAddressSpace = 1 << 15;
 static const size_t c_dwNumRegisters = 8;
 

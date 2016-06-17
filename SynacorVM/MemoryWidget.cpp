@@ -1,9 +1,12 @@
+#include "stdafx.h"
+
 #include "MemoryWidget.h"
 #include "SynacorVM.h"
 
+#include <assert.h>
+
 #include <QListView>
 #include <QHBoxLayout>
-#include <assert.h>
 #include <QTabWidget>
 #include <QStringListModel>
 
@@ -70,7 +73,7 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 
 	setLayout(layout);
 
-	for (int i = 0; i < MM_MAX; i++)
+	for (int i = 0; i < MM_MAX_ELEM; i++)
 	{
 		memoryDirty[i] = false;
 	}
@@ -161,7 +164,7 @@ void MemoryWidget::update()
 	}
 	pendingMemoryUpdates.clear();
 
-	for (int i = 0; i < MM_MAX; i++)
+	for (int i = 0; i < MM_MAX_ELEM; i++)
 	{
 		if (memoryDirty[i])
 		{

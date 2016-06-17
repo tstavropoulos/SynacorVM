@@ -4,7 +4,6 @@
 #include "SynacorVM.h"
 
 #include <QWidget>
-#include <vector>
 
 QT_BEGIN_NAMESPACE
 class QListView;

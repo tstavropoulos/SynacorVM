@@ -1,8 +1,11 @@
+#include "stdafx.h"
+
 #include "mainwindow.h"
+
+#include <signal.h>
+
 #include <QApplication>
 #include <QMetaObject>
-#include <signal.h>
-#include <QObject>
 
 
 void signalhandler(int sig) {
