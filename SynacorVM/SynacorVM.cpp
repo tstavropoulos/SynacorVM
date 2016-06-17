@@ -527,7 +527,6 @@ void SynacorVM::updateInput(const QString &input)
 	bufferedInput += input;
 	if (state == VMS_AWAITING_INPUT)
 	{
-		emit updatePointer(inst);
 		state = VMS_RUNNING;
 	}
 }
