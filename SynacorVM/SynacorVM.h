@@ -13,6 +13,8 @@ enum VMState
 	VMS_AWAITING_INPUT,
 	VMS_RUNNING,
 	VMS_BREAK,
+	VMS_STEP_INTO,
+	VMS_STEP_OVER,
 	VMS_MAX
 };
 
@@ -59,12 +61,17 @@ protected:
 
 	int executionsPerUpdate;
 
+	int numReturnsUntilStepOverEnds;
+	bool ignoreNextBreakpoint;
+
 public slots:
 	//System Slots
 	void reset();
 	void pause(bool pause);
 	void update();
 	void updateInput(const QString &input);
+	void stepInto();
+	void stepOver();
 
 	//Memory Slots
 	void changeMemory(uint16_t address, uint16_t value);

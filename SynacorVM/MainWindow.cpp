@@ -55,6 +55,16 @@ void MainWindow::createMenus()
 	fileMenu->addAction(resumeAction);
 	connect(resumeAction, SIGNAL(triggered()), sourceDebugger_, SLOT(resume()));
 
+	QAction *stepIntoAction = new QAction("Step &Into", this);
+	stepIntoAction->setShortcut(QKeySequence(tr("F11", "Step &Into")));
+	fileMenu->addAction(stepIntoAction);
+	connect(stepIntoAction, SIGNAL(triggered()), sourceDebugger_, SLOT(stepInto()));
+
+	QAction *stepOverAction = new QAction("Step &Over", this);
+	stepOverAction->setShortcut(QKeySequence(tr("F10", "Step &Over")));
+	fileMenu->addAction(stepOverAction);
+	connect(stepOverAction, SIGNAL(triggered()), sourceDebugger_, SLOT(stepOver()));
+
 	fileMenu->addSeparator();
 
 	QAction *exitAction = new QAction("E&xit", this);

@@ -33,6 +33,8 @@ public slots:
 	void notifyError(VMErrors error);
 	void resume();
 	void pause();
+	void stepInto();
+	void stepOver();
 
 protected:
 	OutputWidget *outputWidget;

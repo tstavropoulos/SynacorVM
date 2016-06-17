@@ -193,3 +193,13 @@ void SourceDebugger::pause()
 {
 	synacorVM->pause(true);
 }
+
+void SourceDebugger::stepInto()
+{
+	synacorVM->stepInto();
+}
+
+void SourceDebugger::stepOver()
+{
+	synacorVM->stepOver();
+}

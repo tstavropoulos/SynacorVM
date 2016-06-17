@@ -12,7 +12,14 @@
 #define VERBOSE_PRINTS 0
 
 SynacorVM::SynacorVM()
-	: registers(c_dwNumRegisters), breakpoints(c_dwAddressSpace), inst(0), state(VMS_HALTED), executionsPerUpdate(1000), loaded(false)
+	: registers(c_dwNumRegisters)
+	, breakpoints(c_dwAddressSpace)
+	, inst(0)
+	, state(VMS_HALTED)
+	, executionsPerUpdate(1000)
+	, loaded(false)
+	, numReturnsUntilStepOverEnds(0)
+	, ignoreNextBreakpoint(false)
 {
 
 }
@@ -123,6 +130,10 @@ void SynacorVM::pause(bool pause)
 	case VMS_BREAK:
 	{
 		state = pause ? VMS_BREAK : VMS_RUNNING;
+		if (!pause && breakpoints[inst])
+		{
+			ignoreNextBreakpoint = true;
+		}
 		break;
 	}
 	case VMS_AWAITING_INPUT:
@@ -138,12 +149,47 @@ void SynacorVM::pause(bool pause)
 	}
 }
 
+void SynacorVM::stepInto()
+{
+	if (state != VMS_BREAK)
+	{
+		return;
+	}
+	state = VMS_STEP_INTO;
+	ignoreNextBreakpoint = true;
+}
+
+void SynacorVM::stepOver()
+{
+	if (state != VMS_BREAK)
+	{
+		return;
+	}
+
+	// 17 == CALL
+	if (memory[inst] != 17)
+	{
+		state = VMS_STEP_INTO;
+	}
+	else
+	{
+		state = VMS_STEP_OVER;
+		numReturnsUntilStepOverEnds = 1;
+	}
+	ignoreNextBreakpoint = true;
+}
+
 void SynacorVM::load(const std::vector<uint16_t> &buffer)
 {
 	memory = std::vector<uint16_t>(buffer);
 	startMemoryBU = std::vector<uint16_t>(buffer);
 
 	loaded = true;
+}
+
+static bool IsRunningState(VMState state)
+{
+	return state == VMS_RUNNING || state == VMS_STEP_INTO || state == VMS_STEP_OVER;
 }
 
 void SynacorVM::update()
@@ -157,18 +203,27 @@ void SynacorVM::update()
 		break;
 	}
 	case VMS_RUNNING:
+	case VMS_STEP_INTO:
+	case VMS_STEP_OVER:
 	{
 		int executionCount = executionsPerUpdate;
-		while (state == VMS_RUNNING && executionCount-- > 0)
+		while (IsRunningState(state) && executionCount-- > 0)
 		{
-			if (breakpoints[inst])
+			if (breakpoints[inst] && !ignoreNextBreakpoint)
 			{
 				emit updatePointer(inst);
 				state = VMS_BREAK;
 				break;
 			}
+			ignoreNextBreakpoint = false;
 
 			inst = handleOp(inst);
+
+			if (state == VMS_STEP_INTO)
+			{
+				emit updatePointer(inst);
+				state = VMS_BREAK;
+			}
 		}
 
 		break;
@@ -442,6 +497,11 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		stack.push_back(tempInst);
 		emit pushStack(tempInst);
 		tempInst = a;
+
+		if (state == VMS_STEP_OVER)
+		{
+			numReturnsUntilStepOverEnds++;
+		}
 		break;
 	}
 
@@ -463,6 +523,15 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 			stack.pop_back();
 			emit popStack();
 			tempInst = top;
+
+			if (state == VMS_STEP_OVER)
+			{
+				if (--numReturnsUntilStepOverEnds == 0)
+				{
+					state = VMS_BREAK;
+					emit updatePointer(inst);
+				}
+			}
 			break;
 		}
 	}
