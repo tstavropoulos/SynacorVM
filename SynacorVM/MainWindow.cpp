@@ -23,7 +23,8 @@ void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
 	
-    QAction *loadAction = new QAction("&Load", this);
+    QAction *loadAction = new QAction("&Open", this);
+	loadAction->setShortcut(QKeySequence(tr("Ctrl+O", "File|&Open")));
     fileMenu->addAction(loadAction);
     connect(loadAction, SIGNAL(triggered()), sourceDebugger_, SLOT(load()));
 
@@ -34,6 +35,7 @@ void MainWindow::createMenus()
 	connect(reduceAction, SIGNAL(triggered()), sourceDebugger_, SLOT(reduce()));
 
 	QAction *runAction = new QAction("&Run", this);
+	runAction->setShortcut(QKeySequence(tr("Ctrl+R", "File|&Run")));
 	fileMenu->addAction(runAction);
 	connect(runAction, SIGNAL(triggered()), sourceDebugger_, SLOT(run()));
 
@@ -44,10 +46,12 @@ void MainWindow::createMenus()
 	fileMenu->addSeparator();
 
 	QAction *pauseAction = new QAction("&Pause", this);
+	pauseAction->setShortcut(QKeySequence(tr("Shift+F5", "File|&Pause")));
 	fileMenu->addAction(pauseAction);
 	connect(pauseAction, SIGNAL(triggered()), sourceDebugger_, SLOT(pause()));
 
 	QAction *resumeAction = new QAction("Res&ume", this);
+	resumeAction->setShortcut(QKeySequence(tr("F5", "File|Res&ume")));
 	fileMenu->addAction(resumeAction);
 	connect(resumeAction, SIGNAL(triggered()), sourceDebugger_, SLOT(resume()));
 
