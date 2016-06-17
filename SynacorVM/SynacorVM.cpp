@@ -11,10 +11,8 @@
 
 #define VERBOSE_PRINTS 0
 
-
-
 SynacorVM::SynacorVM()
-	: registers(c_dwNumRegisters), inst(0), state(VMS_HALTED), executionsPerUpdate(1000), loaded(false)
+	: registers(c_dwNumRegisters), breakpoints(c_dwAddressSpace), inst(0), state(VMS_HALTED), executionsPerUpdate(1000), loaded(false)
 {
 
 }
@@ -93,10 +91,11 @@ void SynacorVM::reset()
 	}
 
 	inst = 0;
-	state = VMS_HALTED;
-	paused = false;
-	memory = std::vector<uint16_t>(startMemoryBU);
+	state = VMS_BREAK;
+	emit updatePointer(inst);
+	memory = startMemoryBU;
 	bufferedInput = QString();
+	//breakpoints = std::vector<bool>(c_dwAddressSpace);
 }
 
 void SynacorVM::run()
@@ -115,19 +114,20 @@ void SynacorVM::pause(bool pause)
 {
 	switch (state)
 	{
-	case VMS_AWAITING_INPUT:
-	{
-		paused = pause;
-		break;
-	}
-	case VMS_HALTED:
-	{
-
-		break;
-	}
 	case VMS_RUNNING:
 	{
-		paused = pause;
+		emit updatePointer(inst);
+
+		//keep goin'
+	}
+	case VMS_BREAK:
+	{
+		state = pause ? VMS_BREAK : VMS_RUNNING;
+		break;
+	}
+	case VMS_AWAITING_INPUT:
+	case VMS_HALTED:
+	{
 		break;
 	}
 	default:
@@ -148,35 +148,36 @@ void SynacorVM::load(const std::vector<uint16_t> &buffer)
 
 void SynacorVM::update()
 {
-	if (!paused)
+	switch (state)
 	{
-		switch (state)
+	case VMS_BREAK:
+	case VMS_AWAITING_INPUT:
+	case VMS_HALTED:
+	{
+		break;
+	}
+	case VMS_RUNNING:
+	{
+		int executionCount = executionsPerUpdate;
+		while (state == VMS_RUNNING && executionCount-- > 0)
 		{
-		case VMS_AWAITING_INPUT:
-		{
-			break;
-		}
-		case VMS_HALTED:
-		{
-			break;
-		}
-		case VMS_RUNNING:
-		{
-			int executionCount = executionsPerUpdate;
-			while (state == VMS_RUNNING && executionCount-- > 0 && !paused)
+			if (breakpoints[inst])
 			{
-				inst = handleOp(inst);
+				emit updatePointer(inst);
+				state = VMS_BREAK;
+				break;
 			}
 
-			break;
-		}
-		default:
-		{
-			assert(0 && "State unsupported.");
-			break;
-		}
+			inst = handleOp(inst);
 		}
 
+		break;
+	}
+	default:
+	{
+		assert(0 && "State unsupported.");
+		break;
+	}
 	}
 }
 
@@ -196,6 +197,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		std::cout << "[" << tempInst - 1 << "]" << "HALT" << std::endl;
 #endif
 		state = VMS_HALTED;
+		emit updatePointer(opAddress);
 		break;
 	}
 
@@ -452,6 +454,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 #endif
 		if (stack.empty())
 		{
+			emit updatePointer(opAddress);
 			state = VMS_HALTED;
 		}
 		else
@@ -489,6 +492,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		}
 		else
 		{
+			emit updatePointer(opAddress);
 			state = VMS_AWAITING_INPUT;
 
 			//Move back to the operation that caused us to wait for input
@@ -523,6 +527,7 @@ void SynacorVM::updateInput(const QString &input)
 	bufferedInput += input;
 	if (state == VMS_AWAITING_INPUT)
 	{
+		emit updatePointer(inst);
 		state = VMS_RUNNING;
 	}
 }
@@ -556,8 +561,13 @@ void SynacorVM::changeStackModify(uint16_t index, uint16_t value)
 	}
 }
 
+void SynacorVM::setBreakpoint(uint16_t address, bool set)
+{
+	breakpoints[address] = set;
+}
 
-void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
+
+void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<uint16_t> &instrNum)
 {
 	if (!loaded)
 	{
@@ -568,6 +578,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 
 	for (uint16_t i = 0; i < c_dwAddressSpace;)
 	{
+		instrNum.push_back(i);
 		const uint16_t op = memory[i++];
 		QString instructions;
 		QString arguments;

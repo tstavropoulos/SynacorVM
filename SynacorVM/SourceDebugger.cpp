@@ -40,10 +40,20 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	synacorVM = new SynacorVM();
 
-	connect(synacorVM, SIGNAL(print(const QString&)), outputWidget, SLOT(print(const QString&)));
-	connect(synacorVM, SIGNAL(clear()), outputWidget, SLOT(clear()));
+	//Connect signals from Assembly Widget to VM
+	connect(assemblyWidget, SIGNAL(setBreakpoint(uint16_t, bool)), synacorVM, SLOT(setBreakpoint(uint16_t, bool)));
+
+	//Connect signals from VM to Assembly Widget
+	connect(synacorVM, SIGNAL(updatePointer(uint16_t)), assemblyWidget, SLOT(updatePointer(uint16_t)));
+
+	//Connect signals from VM to UI
 	connect(synacorVM, SIGNAL(throwError(VMErrors)), this, SLOT(notifyError(VMErrors)));
 
+	//Connect signals from VM to Output Widget
+	connect(synacorVM, SIGNAL(print(const QString&)), outputWidget, SLOT(print(const QString&)));
+	connect(synacorVM, SIGNAL(clear()), outputWidget, SLOT(clear()));
+
+	//Connect signals from Output Widget to VM
 	connect(outputWidget, SIGNAL(submitInput(const QString&)), synacorVM, SLOT(updateInput(const QString&)));
 
 	//Connect signals from VM to Memory Widget
@@ -68,6 +78,8 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	QTimer *memoryTimer = new QTimer(this);
 	connect(memoryTimer, SIGNAL(timeout()), memoryWidget, SLOT(update()));
 	memoryTimer->start(1000);
+
+
 }
 
 void SourceDebugger::load()
@@ -101,9 +113,10 @@ void SourceDebugger::loadfile(const QString &filepath)
 
 		//Update the AssemblyWidget
 		QStringList instr, args;
+		std::vector<uint16_t> instrNum;
 
-		synacorVM->getAssembly(instr, args);
-		assemblyWidget->setAssembly(instr, args);
+		synacorVM->getAssembly(instr, args, instrNum);
+		assemblyWidget->setAssembly(instr, args, instrNum);
 
 		//Pass a copy of the memory to the MemoryWidget
 		memoryWidget->load(memory);
@@ -161,10 +174,22 @@ void SourceDebugger::reset()
 
 	QStringList instr, args;
 
-	synacorVM->getAssembly(instr, args);
+	std::vector<uint16_t> instrNum;
+
+	synacorVM->getAssembly(instr, args, instrNum);
 
 	if (instr.length() != 0)
 	{
-		assemblyWidget->setAssembly(instr, args);
+		assemblyWidget->setAssembly(instr, args, instrNum);
 	}
+}
+
+void SourceDebugger::resume()
+{
+	synacorVM->pause(false);
+}
+
+void SourceDebugger::pause()
+{
+	synacorVM->pause(true);
 }

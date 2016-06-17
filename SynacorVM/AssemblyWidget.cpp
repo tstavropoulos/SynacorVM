@@ -7,7 +7,7 @@
 #include <QMessageBox>
 
 AssemblyWidget::AssemblyWidget(QWidget *parent)
-	: QWidget(parent), loaded(false)
+	: QWidget(parent), loaded(false), showReduced(false), currentExecAddress(0)
 {
 	QHBoxLayout *layout = new QHBoxLayout(this);
 
@@ -24,13 +24,39 @@ AssemblyWidget::AssemblyWidget(QWidget *parent)
 	listView->setModel(listModel);
 	listView->setMovement(QListView::Static);
 	listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+	connect(listView, SIGNAL(doubleClicked(const QModelIndex&)), this, SLOT(operationBreakToggled(const QModelIndex&)));
 }
 
-void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringList &arguments)
+void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringList &arguments, const std::vector<uint16_t> &instrAddress)
 {
 	instr = instructions;
 	args = arguments;
+	this->instrAddress = instrAddress;
 
+	QStringList temp;
+
+	loaded = true;
+
+	breakpoints = std::vector<bool>(instr.length());
+
+	rebuild();
+}
+
+void AssemblyWidget::rebuild()
+{
+	if (showReduced)
+	{
+		rebuildReduced();
+	}
+	else
+	{
+		rebuildSimple();
+	}
+}
+
+void AssemblyWidget::rebuildSimple()
+{
 	QStringList temp;
 
 	for (int i = 0; i < instr.length(); i++)
@@ -39,25 +65,21 @@ void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringL
 		{
 			break;
 		}
-		temp << QString("%1:\t").arg(i,4,16,QChar('0')) + instr[i] + " " + args[i];
-		instrNum << i;
+		temp << QString("%1%2  %3:\t")
+			.arg((instrAddress[i] == currentExecAddress) ? ">" : " ")
+			.arg(breakpoints[i] ? "*" : " ")
+			.arg(instrAddress[i], 4, 16, QChar('0'))
+			+ instr[i] + " " + args[i];
 	}
 
+	currentInstrAddress = instrAddress;
 
 	listModel->setStringList(temp);
-
-	loaded = true;
+	currentAssembly = temp;
 }
 
-void AssemblyWidget::reduce()
+void AssemblyWidget::rebuildReduced()
 {
-	if (!loaded)
-	{
-		QMessageBox::warning(this,
-			QString("Reduce Error"),
-			QString("You cannot reduce the program until you load a binary file."));
-		return;
-	}
 
 	QString lastInstr;
 	QString tmpPrintBuffer;
@@ -65,6 +87,7 @@ void AssemblyWidget::reduce()
 	int instBegin = -1;
 
 	QStringList reducedList;
+	currentInstrAddress.clear();
 	int numDatas = 0;
 	int numNoops = 0;
 
@@ -89,33 +112,42 @@ void AssemblyWidget::reduce()
 
 		if (lastInstr == "PRNT" && thisInstr != "PRNT")
 		{
-			reducedList << QString("%1-%2:\t")
+			reducedList << QString("%1%2 %3-%4:\t")
+				.arg((instrAddress[i] == currentExecAddress) ? ">" : " ")
+				.arg(breakpoints[instBegin] ? "*" : " ")
 				.arg(instBegin, 4, 16, QChar('0'))
-				.arg(instrNum[i - 1], 4, 16, QChar('0'))
+				.arg(instrAddress[i - 1], 4, 16, QChar('0'))
 				+ "PRNT " + tmpPrintBuffer;
 			tmpPrintBuffer = "";
+			currentInstrAddress.push_back(instBegin);
 			instBegin = -1;
 		}
 		else if (lastInstr == "DATA" && (thisInstr != "DATA" || numDatas >= 8))
 		{
-			reducedList << QString("%1-%2:\t")
+			reducedList << QString("%1%2 %3-%4:\t")
+				.arg((instrAddress[i] == currentExecAddress) ? ">" : " ")
+				.arg(breakpoints[instBegin] ? "*" : " ")
 				.arg(instBegin, 4, 16, QChar('0'))
-				.arg(instrNum[i - 1], 4, 16, QChar('0'))
+				.arg(instrAddress[i - 1], 4, 16, QChar('0'))
 				+ "DATA " + tmpPrintBuffer;
 			tmpPrintBuffer = "";
+			currentInstrAddress.push_back(instBegin);
 			numDatas = 0;
 			instBegin = -1;
 		}
 		else if (lastInstr == "NOOP" && thisInstr != "NOOP")
 		{
-			reducedList << QString("%1-%2:\tNOOP\t(%3)")
+			reducedList << QString("%1%2 %3-%4:\tNOOP\t(%5)")
+				.arg((instrAddress[i] == currentExecAddress) ? ">" : " ")
+				.arg(breakpoints[instBegin] ? "*" : " ")
 				.arg(instBegin, 4, 16, QChar('0'))
-				.arg(instrNum[i - 1], 4, 16, QChar('0'))
+				.arg(instrAddress[i - 1], 4, 16, QChar('0'))
 				.arg(numNoops);
+			currentInstrAddress.push_back(instBegin);
 			numNoops = 0;
 			instBegin = -1;
 		}
-		
+
 		if (thisInstr == "")
 		{
 			break;
@@ -126,7 +158,7 @@ void AssemblyWidget::reduce()
 			numNoops++;
 			if (instBegin == -1)
 			{
-				instBegin = instrNum[i];
+				instBegin = instrAddress[i];
 			}
 		}
 		else if (thisInstr == "PRNT")
@@ -134,7 +166,7 @@ void AssemblyWidget::reduce()
 			tmpPrintBuffer += thisArg;
 			if (instBegin == -1)
 			{
-				instBegin = instrNum[i];
+				instBegin = instrAddress[i];
 			}
 		}
 		else if (thisInstr == "DATA")
@@ -143,18 +175,75 @@ void AssemblyWidget::reduce()
 			numDatas++;
 			if (instBegin == -1)
 			{
-				instBegin = instrNum[i];
+				instBegin = instrAddress[i];
 			}
 		}
 		else
 		{
-			reducedList << QString("     %1:\t")
-				.arg(instrNum[i], 4, 16, QChar('0'))
+			reducedList << QString("%1%2      %3:\t")
+				.arg((instrAddress[i] == currentExecAddress)?">":" ")
+				.arg(breakpoints[i] ? "*" : " ")
+				.arg(instrAddress[i], 4, 16, QChar('0'))
 				+ thisInstr
 				+ ((thisArg == "") ? ("") : (" " + thisArg));
+			currentInstrAddress.push_back(instrAddress[i]);
 		}
 		lastInstr = thisInstr;
 	}
 
 	listModel->setStringList(reducedList);
+
+	currentAssembly = reducedList;
+}
+
+void AssemblyWidget::reduce()
+{
+	if (!loaded)
+	{
+		QMessageBox::warning(this,
+			QString("Reduce Error"),
+			QString("You cannot reduce the program until you load a binary file."));
+		return;
+	}
+
+	showReduced = !showReduced;
+
+	rebuild();
+}
+
+void AssemblyWidget::operationBreakToggled(const QModelIndex &index)
+{
+	const int instrNum = currentInstrAddress[index.row()];
+	breakpoints[instrNum] = !breakpoints[instrNum];
+
+	emit setBreakpoint(instrNum, breakpoints[instrNum]);
+
+	currentAssembly[index.row()].replace(1,1, (breakpoints[instrNum] ? "*" : " "));
+
+	listModel->setData(index, currentAssembly[index.row()]);
+}
+
+void AssemblyWidget::updatePointer(uint16_t address)
+{
+	if (address == currentExecAddress)
+	{
+		return;
+	}
+
+	auto iter = std::lower_bound(currentInstrAddress.begin(), currentInstrAddress.end(), currentExecAddress);
+	uint16_t oldIndex = iter - currentInstrAddress.begin();
+	currentAssembly[oldIndex].replace(0, 1, " ");
+
+	currentExecAddress = address;
+
+	iter = std::lower_bound(currentInstrAddress.begin(), currentInstrAddress.end(), currentExecAddress);
+	uint16_t newIndex = iter - currentInstrAddress.begin();
+	currentAssembly[newIndex].replace(0, 1, ">");
+
+	listModel->setStringList(currentAssembly);
+
+	QModelIndex index = listModel->index(newIndex);
+
+	listView->scrollTo(index);
+	listView->setCurrentIndex(index);
 }

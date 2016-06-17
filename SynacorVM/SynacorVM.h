@@ -12,6 +12,7 @@ enum VMState
 	VMS_HALTED = 0,
 	VMS_AWAITING_INPUT,
 	VMS_RUNNING,
+	VMS_BREAK,
 	VMS_MAX
 };
 
@@ -30,7 +31,7 @@ public:
 	SynacorVM();
 	void load(const std::vector<uint16_t> &buffer);
 
-	void getAssembly (QStringList &instr, QStringList &args);
+	void getAssembly (QStringList &instr, QStringList &args, std::vector<uint16_t> &instrNum);
 	void run();
 
 protected:
@@ -46,10 +47,11 @@ protected:
 	std::vector<uint16_t> registers;
 	std::vector<uint16_t> stack;
 
+	std::vector<bool> breakpoints;
+
 	uint16_t inst;
 
 	bool loaded;
-	bool paused;
 
 	QString bufferedInput;
 
@@ -71,6 +73,9 @@ public slots:
 	void changeStackPop();
 	void changeStackModify(uint16_t index, uint16_t value);
 
+	//Assembly Slots
+	void setBreakpoint(uint16_t address, bool set);
+
 signals:
 	//Output Signals
 	void print(const QString &output);
@@ -85,6 +90,9 @@ signals:
 	void updateRegister(uint16_t reg, uint16_t value);
 	void pushStack(uint16_t value);
 	void popStack();
+
+	//Assembly Signals
+	void updatePointer(uint16_t address);
 };
 
 #endif

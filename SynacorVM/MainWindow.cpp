@@ -43,6 +43,16 @@ void MainWindow::createMenus()
 
 	fileMenu->addSeparator();
 
+	QAction *pauseAction = new QAction("&Pause", this);
+	fileMenu->addAction(pauseAction);
+	connect(pauseAction, SIGNAL(triggered()), sourceDebugger_, SLOT(pause()));
+
+	QAction *resumeAction = new QAction("Res&ume", this);
+	fileMenu->addAction(resumeAction);
+	connect(resumeAction, SIGNAL(triggered()), sourceDebugger_, SLOT(resume()));
+
+	fileMenu->addSeparator();
+
 	QAction *exitAction = new QAction("E&xit", this);
 	fileMenu->addAction(exitAction);
 	connect(exitAction, SIGNAL(triggered()), sourceDebugger_, SLOT(exit()));

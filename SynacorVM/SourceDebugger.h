@@ -31,6 +31,8 @@ public slots:
 	void run();
 	void exit();
 	void notifyError(VMErrors error);
+	void resume();
+	void pause();
 
 protected:
 	OutputWidget *outputWidget;
