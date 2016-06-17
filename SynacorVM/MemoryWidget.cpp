@@ -67,11 +67,11 @@ void MemoryWidget::update(uint16_t address, uint16_t value)
 {
 	if (address <= 32767)
 	{
-		memory[address] = QString::number(address, 16).toUpper().rightJustified(4,'0') + ":\t" + QString::number(value, 16).toUpper().rightJustified(4, '0');
+		memory[address] = QString("%1:\t%2").arg(address, 4, 16, QChar('0')).arg(value, 4, 16, QChar('0'));
 	}
 	else if (address <= 32775)
 	{
-		registers[address - 32768] = QString::number(address - 32768, 16).toUpper().rightJustified(4, '0') + ":\t" + QString::number(value, 16).toUpper().rightJustified(4, '0');;
+		registers[address - 32768] = QString("r%1:\t%2").arg(address - 32768, 2, 16, QChar('0')).arg(value, 4, 16, QChar('0'));
 	}
 	else
 	{
@@ -86,7 +86,7 @@ void MemoryWidget::load(const std::vector<uint16_t> &buffer)
 	int index = 0;
 	for (auto iter = buffer.begin(); iter != buffer.end(); iter++)
 	{
-		startMemoryBU << QString::number(index++, 16).toUpper().rightJustified(4, '0') + ":\t" + QString::number(*iter, 16).toUpper().rightJustified(4, '0');
+		startMemoryBU << QString("%1:\t%2").arg(index++, 4, 16, QChar('0')).arg(*iter, 4, 16, QChar('0'));
 	}
 
 	memory = QStringList(startMemoryBU);
@@ -95,7 +95,7 @@ void MemoryWidget::load(const std::vector<uint16_t> &buffer)
 	registers.clear();
 	for (int i = 0; i < c_dwNumRegisters; i++)
 	{
-		registers << QString::number(i, 16).toUpper().rightJustified(4, '0') + ":\t" + QString::number(0, 16).toUpper().rightJustified(4, '0');;
+		registers << QString("r%1:\t%2").arg(i, 2, 16, QChar('0')).arg(0, 4, 16, QChar('0'));
 	}
 	refreshView(MM_REGISTERS);
 
@@ -111,7 +111,7 @@ void MemoryWidget::reset()
 	registers.clear();
 	for (int i = 0; i < c_dwNumRegisters; i++)
 	{
-		registers << QString::number(i, 16).toUpper().rightJustified(4, '0') + ":\t" + QString::number(0, 16).toUpper().rightJustified(4, '0');;
+		registers << QString("r%1:\t%2").arg(i, 2, 16, QChar('0')).arg(0, 4, 16, QChar('0'));
 	}
 	refreshView(MM_REGISTERS);
 
@@ -154,7 +154,7 @@ void MemoryWidget::updateRegister(uint16_t reg, uint16_t value)
 
 void MemoryWidget::pushStack(uint16_t value)
 {
-	stack.push_back(QString::number(value, 16).toUpper().rightJustified(4, '0'));
+	stack.push_back(QString("%1").arg(value,4,16,QChar('0')));
 
 	flagDirty(MM_STACK);
 }

@@ -22,6 +22,8 @@ class SourceDebugger : public QWidget
 public:
 	SourceDebugger(QWidget *parent);
 
+	void loadfile(const QString &filepath);
+
 public slots:
 	void load();
 	void reduce();

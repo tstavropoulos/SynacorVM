@@ -74,6 +74,11 @@ void SourceDebugger::load()
 {
 	QString filepath = QFileDialog::getOpenFileName(this, QString("Select Synacor Binary File"));
 
+	loadfile(filepath);
+}
+
+void SourceDebugger::loadfile(const QString &filepath)
+{
 	if (!filepath.isEmpty())
 	{
 
@@ -91,7 +96,7 @@ void SourceDebugger::load()
 		{
 			in.read((char *)&memory[dwCurOffset++], sizeof(uint16_t));
 		}
-		
+
 		synacorVM->load(memory);
 
 		//Update the AssemblyWidget

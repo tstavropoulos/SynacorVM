@@ -21,14 +21,14 @@ SynacorVM::SynacorVM()
 
 QString SynacorVM::StringTranslateChar(uint16_t value)
 {
-	QString returnVal = QString("%1 ").arg(0xFFFF);
+	QString returnVal = QString("%1 ").arg(0xFFFF, 4, 16, QChar('0'));
 	if (value <= 32767)
 	{
 		returnVal = (wchar_t)value;
 	}
 	else if (value <= 32775)
 	{
-		returnVal = QString("r%1 ").arg(value - 32768);
+		returnVal = QString("r%1  ").arg(value - 32768, 2, 16, QChar('0'));
 	}
 
 	return returnVal;
@@ -36,14 +36,14 @@ QString SynacorVM::StringTranslateChar(uint16_t value)
 
 QString SynacorVM::StringTranslate(uint16_t value)
 {
-	QString returnVal = QString("%1 ").arg(0xFFFF);
+	QString returnVal = QString("%1 ").arg(QString::number(0xFFFF, 16).toUpper().rightJustified(4, '0'));
 	if (value <= 32767)
 	{
-		returnVal = QString("%1 ").arg(value);
+		returnVal = QString("%1 ").arg(value, 4, 16, QChar('0'));
 	}
 	else if (value <= 32775)
 	{
-		returnVal = QString("r%1 ").arg(value - 32768);
+		returnVal = QString("r%1  ").arg(value - 32768, 2, 16, QChar('0'));
 	}
 
 	return returnVal;
@@ -585,10 +585,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//set register <a> to the value of <b>
 			case 1:
 			{
-				instructions = "SET";
+				instructions = "SET ";
 				if (i + 2 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 				}
 				break;
@@ -610,7 +610,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//remove the top element from the stack and write it into <a>; empty stack = error
 			case 3:
 			{
-				instructions = "POP";
+				instructions = "POP ";
 				if (i + 1 < c_dwAddressSpace)
 				{
 					arguments += StringTranslate(memory[i++]);
@@ -622,10 +622,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//set <a> to 1 if <b> is equal to <c>; set it to 0 otherwise
 			case 4:
 			{
-				instructions = "EQ";
+				instructions = "EQ  ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -636,10 +636,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//set <a> to 1 if <b> is greater than <c>; set it to 0 otherwise
 			case 5:
 			{
-				instructions = "GT";
+				instructions = "GT  ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -650,7 +650,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//jump to <a>
 			case 6:
 			{
-				instructions = "JMP";
+				instructions = "JMP ";
 				if (i + 1 < c_dwAddressSpace)
 				{
 					arguments += StringTranslate(memory[i++]);
@@ -662,7 +662,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//if <a> is nonzero, jump to <b>
 			case 7:
 			{
-				instructions = "JT";
+				instructions = "JT  ";
 				if (i + 2 < c_dwAddressSpace)
 				{
 					arguments += StringTranslate(memory[i++]);
@@ -675,7 +675,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//if <a> is zero, jump to <b>
 			case 8:
 			{
-				instructions = "JF";
+				instructions = "JF  ";
 				if (i + 2 < c_dwAddressSpace)
 				{
 					arguments += StringTranslate(memory[i++]);
@@ -688,10 +688,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//assign into <a> the sum of <b> and <c> (modulo 32768)
 			case 9:
 			{
-				instructions = "ADD";
+				instructions = "ADD ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -705,7 +705,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 				instructions = "MULT";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -716,10 +716,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//store into <a> the remainder of <b> divided by <c>
 			case 11:
 			{
-				instructions = "MOD";
+				instructions = "MOD ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -730,10 +730,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//stores into <a> the bitwise and of <b> and <c>
 			case 12:
 			{
-				instructions = "AND";
+				instructions = "AND ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -744,10 +744,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//stores into <a> the bitwise or of <b> and <c>
 			case 13:
 			{
-				instructions = "OR";
+				instructions = "OR  ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -758,10 +758,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//stores 15 - bit bitwise inverse of <b> in <a>
 			case 14:
 			{
-				instructions = "NOT";
+				instructions = "NOT ";
 				if (i + 2 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 				}
 				break;
@@ -774,7 +774,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 				instructions = "RMEM";
 				if (i + 2 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 					arguments += StringTranslate(memory[i++]);
 				}
 				break;
@@ -809,7 +809,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//remove the top element from the stack and jump to it; empty stack = halt
 			case 18:
 			{
-				instructions = "RET";
+				instructions = "RET ";
 				break;
 			}
 
@@ -828,10 +828,10 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args)
 			//read a character from the terminal and write its ascii code to <a>; it can be assumed that once input starts, it will continue until a newline is encountered; this means that you can safely read whole lines from the keyboard and trust that they will be fully read
 			case 20:
 			{
-				instructions = "IN";
+				instructions = "IN  ";
 				if (i + 1 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1 ").arg(memory[i++] - 32768);
+					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
 				}
 				break;
 			}

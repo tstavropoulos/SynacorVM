@@ -39,7 +39,7 @@ void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringL
 		{
 			break;
 		}
-		temp << QString("%1\t").arg(i) + instr[i] + " " + args[i];
+		temp << QString("%1:\t").arg(i,4,16,QChar('0')) + instr[i] + " " + args[i];
 		instrNum << i;
 	}
 
@@ -89,20 +89,29 @@ void AssemblyWidget::reduce()
 
 		if (lastInstr == "PRNT" && thisInstr != "PRNT")
 		{
-			reducedList << QString("%1-%2:\t").arg(instBegin).arg(instrNum[i - 1]) + "PRNT " + tmpPrintBuffer;
+			reducedList << QString("%1-%2:\t")
+				.arg(instBegin, 4, 16, QChar('0'))
+				.arg(instrNum[i - 1], 4, 16, QChar('0'))
+				+ "PRNT " + tmpPrintBuffer;
 			tmpPrintBuffer = "";
 			instBegin = -1;
 		}
 		else if (lastInstr == "DATA" && (thisInstr != "DATA" || numDatas >= 8))
 		{
-			reducedList << QString("%1-%2:\t").arg(instBegin).arg(instrNum[i - 1]) + "DATA " + tmpPrintBuffer;
+			reducedList << QString("%1-%2:\t")
+				.arg(instBegin, 4, 16, QChar('0'))
+				.arg(instrNum[i - 1], 4, 16, QChar('0'))
+				+ "DATA " + tmpPrintBuffer;
 			tmpPrintBuffer = "";
 			numDatas = 0;
 			instBegin = -1;
 		}
 		else if (lastInstr == "NOOP" && thisInstr != "NOOP")
 		{
-			reducedList << QString("%1-%2:\tNOOP\t(%3)").arg(instBegin).arg(instrNum[i - 1]).arg(numNoops);
+			reducedList << QString("%1-%2:\tNOOP\t(%3)")
+				.arg(instBegin, 4, 16, QChar('0'))
+				.arg(instrNum[i - 1], 4, 16, QChar('0'))
+				.arg(numNoops);
 			numNoops = 0;
 			instBegin = -1;
 		}
@@ -139,7 +148,10 @@ void AssemblyWidget::reduce()
 		}
 		else
 		{
-			reducedList << QString("%1:\t").arg(instrNum[i]) + thisInstr + ((thisArg == "") ? ("") : (" " + thisArg));
+			reducedList << QString("%1:\t\t")
+				.arg(instrNum[i], 4, 16, QChar('0'))
+				+ thisInstr
+				+ ((thisArg == "") ? ("") : (" " + thisArg));
 		}
 		lastInstr = thisInstr;
 	}
