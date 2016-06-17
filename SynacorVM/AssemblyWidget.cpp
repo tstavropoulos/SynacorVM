@@ -240,7 +240,9 @@ void AssemblyWidget::updatePointer(uint16_t address)
 	uint16_t newIndex = iter - currentInstrAddress.begin();
 	currentAssembly[newIndex].replace(0, 1, ">");
 
-	listModel->setStringList(currentAssembly);
+	
+	listModel->setData(listModel->index(oldIndex), currentAssembly[oldIndex]);
+	listModel->setData(listModel->index(newIndex), currentAssembly[newIndex]);
 
 	QModelIndex index = listModel->index(newIndex);
 
