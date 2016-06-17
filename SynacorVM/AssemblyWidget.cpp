@@ -148,7 +148,7 @@ void AssemblyWidget::reduce()
 		}
 		else
 		{
-			reducedList << QString("%1:\t\t")
+			reducedList << QString("     %1:\t")
 				.arg(instrNum[i], 4, 16, QChar('0'))
 				+ thisInstr
 				+ ((thisArg == "") ? ("") : (" " + thisArg));
