@@ -147,10 +147,12 @@ void MemoryWidget::update()
 		if (address <= 32767)
 		{
 			memory[address] = QString("%1:\t%2").arg(address, 4, 16, QChar('0')).arg(value, 4, 16, QChar('0'));
+			flagDirty(MM_MEMORY);
 		}
 		else if (address <= 32775)
 		{
 			registers[address - 32768] = QString("r%1:\t%2").arg(address - 32768, 2, 16, QChar('0')).arg(value, 4, 16, QChar('0'));
+			flagDirty(MM_REGISTERS);
 		}
 		else
 		{
@@ -172,35 +174,22 @@ void MemoryWidget::update()
 void MemoryWidget::updateMemory(uint16_t address, uint16_t value)
 {
 	update(address, value);
-
-	if (address <= 32767)
-	{
-		flagDirty(MM_MEMORY);
-	}
-	else
-	{
-		flagDirty(MM_REGISTERS);
-	}
 }
 
 void MemoryWidget::updateRegister(uint16_t reg, uint16_t value)
 {
 	update(reg + 32768, value);
-
-	flagDirty(MM_REGISTERS);
 }
 
 void MemoryWidget::pushStack(uint16_t value)
 {
 	rawStack.push_back(value);
-
 	flagDirty(MM_STACK);
 }
 
 void MemoryWidget::popStack()
 {
 	rawStack.pop_back();
-
 	flagDirty(MM_STACK);
 }
 
@@ -213,7 +202,6 @@ void MemoryWidget::pushCallstack(uint16_t value)
 void MemoryWidget::popCallstack()
 {
 	rawCallstack.pop_back();
-
 	flagDirty(MM_CALLSTACK);
 }
 
