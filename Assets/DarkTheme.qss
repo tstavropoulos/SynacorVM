@@ -71,36 +71,65 @@ QToolButton {
 }
 
 QTabWidget::pane {
-	font: bold large "Consolas";
+	font: bold "Consolas";
 	font-size: 12pt;
 	border: 1px solid white;
+    top: -1px;
+}
+
+QTabWidget::tab-bar {
+	padding-left: 8px;
+    left: 8px;
 }
 
 QTabBar {
-	font: bold large "Consolas";
+	font: bold "Consolas";
 	font-size: 12pt;
 	color: white;
 }
 
 QTabBar::tab {
-	font: bold large "Consolas";
+	font: bold "Consolas";
 	font-size: 12pt;
 	background-color: #2E2E2E;
 	border: 1px solid lightgray;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+	border-right-color: #2E2E2E;
 	color: white;
 	padding-left: 20px;
 	padding-right: 20px;
 }
 
-
 QTabBar::tab:selected {
-    border-color: lightgray;
-	background-color: #4E4E4E;
+	border: 2px solid lightgray;
     border-bottom-color: #4E4E4E;
+	background-color: #4E4E4E;
+	margin-bottom: -2px;
+	margin-right: -3px;
+	margin-left: -3px;
 }
 
 QTabBar::tab:!selected {
     margin-top: 2px;
+
+}
+
+QTabBar::tab:first:selected {
+    margin-left: 0;
+}
+
+QTabBar::tab:last:selected {
+    margin-right: 0;
+}
+
+QTabBar::tab:last:!selected {
+	border-right-color: lightgray;
+}
+
+QTabBar::tab:only-one {
+    margin-left: 0;
+    margin-right: 0;
 }
 
 QPushButton {
