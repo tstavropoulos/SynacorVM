@@ -24,6 +24,7 @@ OutputWidget::OutputWidget(QWidget *parent)
 
 	//outputView->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 	outputView->setReadOnly(true);
+	outputView->setUndoRedoEnabled(false);
 
 	editWidget = new QLineEdit(this);
 	editWidget->setFont(monoSpacedFont);
