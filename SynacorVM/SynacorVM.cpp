@@ -319,10 +319,12 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 #if VERBOSE_PRINTS
 		std::cout << "[" << tempInst - 1 << "]" << "PUSH " << memory[tempInst] << std::endl;
 #endif
-		const uint16_t a = Translate(memory[tempInst++]);
+		int reg = memory[tempInst++];
+		assert(reg >= 32768 && reg < 32768 + c_dwNumRegisters);
+		const uint16_t a = Translate(reg);
 		stack.push_back(a);
 
-		emit pushStack(a);
+		emit pushStack(a, (StackSource)(SS_PUSH_R0 + (reg - 32768)));
 		break;
 	}
 
@@ -535,8 +537,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 #endif
 		const uint16_t a = Translate(memory[tempInst++]);
 		stack.push_back(tempInst);
-		emit pushStack(tempInst);
-		emit pushCallstack(tempInst);
+		emit pushStack(tempInst, SS_CALL);
 		tempInst = a;
 
 		if (state == VMS_STEP_OVER)
@@ -568,7 +569,6 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 			const uint16_t top = stack.back();
 			stack.pop_back();
 			emit popStack();
-			emit popCallstack();
 			tempInst = top;
 
 			if (state == VMS_STEP_OVER)

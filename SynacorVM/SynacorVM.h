@@ -33,6 +33,18 @@ enum VMErrors
 	VME_MAX
 };
 
+enum StackSource
+{
+	SS_PUSH_R0,
+	SS_PUSH_R1,
+	SS_PUSH_R2,
+	SS_PUSH_R3,
+	SS_PUSH_R4,
+	SS_PUSH_R5,
+	SS_PUSH_R6,
+	SS_PUSH_R7,
+	SS_CALL
+};
 
 class SynacorVM : public QObject
 {
@@ -110,11 +122,8 @@ signals:
 	//Memory Signals
 	void updateMemory(uint16_t address, uint16_t value);
 	void updateRegister(uint16_t reg, uint16_t value);
-	void pushStack(uint16_t value);
+	void pushStack(uint16_t value, StackSource source);
 	void popStack();
-	void pushCallstack(uint16_t value);
-	void popCallstack();
-
 
 	//Assembly Signals
 	void updatePointer(uint16_t address);

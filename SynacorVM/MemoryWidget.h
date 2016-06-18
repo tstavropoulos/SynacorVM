@@ -14,9 +14,10 @@ enum MemoryModule
 	MM_MEMORY = 0,
 	MM_REGISTERS,
 	MM_STACK,
-	MM_CALLSTACK,
 	MM_MAX_ELEM
 };
+
+enum StackSource;
 
 class MemoryWidget : public QDockWidget
 {
@@ -50,8 +51,7 @@ protected:
 	QStringList callstack;
 
 	std::unordered_map<uint16_t, uint16_t> pendingMemoryUpdates;
-	std::vector<uint16_t> rawStack;
-	std::vector<uint16_t> rawCallstack;
+	std::vector<std::pair<uint16_t, StackSource>> rawStack;
 	std::vector<uint16_t> rawMemory;
 
 	uint16_t inst;
@@ -60,10 +60,8 @@ public slots:
 	//VM Slots
 	void updateMemory(uint16_t address, uint16_t value);
 	void updateRegister(uint16_t reg, uint16_t value);
-	void pushStack(uint16_t value);
+	void pushStack(uint16_t value, StackSource source);
 	void popStack();
-	void pushCallstack(uint16_t value);
-	void popCallstack();
 	void updatePointer(uint16_t address);
 
 	//System Slots

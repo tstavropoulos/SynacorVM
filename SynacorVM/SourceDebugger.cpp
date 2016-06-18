@@ -29,7 +29,7 @@ SourceDebugger::SourceDebugger(QMainWindow *parent)
 {
 	qRegisterMetaType<DebuggerState>("DebuggerState");
 	qRegisterMetaType<VMErrors>("VMErrors");
-
+	qRegisterMetaType<StackSource>("StackSource");
 
 	setObjectName("mainWidget");
 
@@ -118,10 +118,8 @@ SourceDebugger::SourceDebugger(QMainWindow *parent)
 	//Connect signals from VM to Memory Widget
 	connect(synacorVM, SIGNAL(updateMemory(uint16_t, uint16_t)), memoryWidget, SLOT(updateMemory(uint16_t, uint16_t)));
 	connect(synacorVM, SIGNAL(updateRegister(uint16_t, uint16_t)), memoryWidget, SLOT(updateRegister(uint16_t, uint16_t)));
-	connect(synacorVM, SIGNAL(pushStack(uint16_t)), memoryWidget, SLOT(pushStack(uint16_t)));
+	connect(synacorVM, SIGNAL(pushStack(uint16_t, StackSource)), memoryWidget, SLOT(pushStack(uint16_t, StackSource)));
 	connect(synacorVM, SIGNAL(popStack()), memoryWidget, SLOT(popStack()));
-	connect(synacorVM, SIGNAL(pushCallstack(uint16_t)), memoryWidget, SLOT(pushCallstack(uint16_t)));
-	connect(synacorVM, SIGNAL(popCallstack()), memoryWidget, SLOT(popCallstack()));
 	connect(synacorVM, SIGNAL(updatePointer(uint16_t)), memoryWidget, SLOT(updatePointer(uint16_t)));
 
 	//Connect signals from Memory Widget for modifying VM

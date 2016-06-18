@@ -160,11 +160,8 @@ void MemoryWidget::load(const std::vector<uint16_t> &buffer)
 
 	rawStack.clear();
 	stack.clear();
-	refreshView(MM_STACK);
-
-	rawCallstack.clear();
 	callstack.clear();
-	refreshView(MM_CALLSTACK);
+	refreshView(MM_STACK);
 }
 
 void MemoryWidget::reset()
@@ -182,11 +179,8 @@ void MemoryWidget::reset()
 
 	rawStack.clear();
 	stack.clear();
-	refreshView(MM_STACK);
-
-	rawCallstack.clear();
 	callstack.clear();
-	refreshView(MM_CALLSTACK);
+	refreshView(MM_STACK);
 }
 
 void MemoryWidget::updatePointer(uint16_t address)
@@ -252,9 +246,9 @@ void MemoryWidget::updateRegister(uint16_t reg, uint16_t value)
 	update(reg + 32768, value);
 }
 
-void MemoryWidget::pushStack(uint16_t value)
+void MemoryWidget::pushStack(uint16_t value, StackSource source)
 {
-	rawStack.push_back(value);
+	rawStack.push_back(std::make_pair(value, source));
 	flagDirty(MM_STACK);
 }
 
@@ -264,53 +258,56 @@ void MemoryWidget::popStack()
 	flagDirty(MM_STACK);
 }
 
-void MemoryWidget::pushCallstack(uint16_t value)
-{
-	rawCallstack.push_back(value);
-	flagDirty(MM_CALLSTACK);
-}
-
-void MemoryWidget::popCallstack()
-{
-	rawCallstack.pop_back();
-	flagDirty(MM_CALLSTACK);
-}
-
 void MemoryWidget::refreshView(MemoryModule module)
 {
 	switch (module)
 	{
-	case MM_MEMORY:
-	{
-		memoryModel->setStringList(memory);
-		emit refreshAssembly();
-		break;
-	}
-	case MM_STACK:
-	{
-		stack.clear();
-		for (auto itr = rawStack.rbegin(); itr != rawStack.rend(); itr++)
+		case MM_MEMORY:
 		{
-			stack.push_back(QString("%1").arg(*itr, 4, 16, QChar('0')));
+			memoryModel->setStringList(memory);
+			emit refreshAssembly();
+			break;
 		}
-		stackModel->setStringList(stack);
-		break;
-	}
-	case MM_REGISTERS:
-	{
-		registerModel->setStringList(registers);
-		break;
-	}
-	case MM_CALLSTACK:
-	{
-		callstack.clear();
-		for (auto itr = rawCallstack.rbegin(); itr != rawCallstack.rend(); itr++)
+		case MM_STACK:
 		{
-			callstack.push_back(QString("%1").arg(*itr, 4, 16, QChar('0')));
+			stack.clear();
+			callstack.clear();
+			for (auto itr = rawStack.rbegin(); itr != rawStack.rend(); itr++)
+			{
+				QString stackStr = QString("%1").arg(itr->first, 4, 16, QChar('0'));
+				switch (itr->second)
+				{
+					case SS_PUSH_R0:
+					case SS_PUSH_R1:
+					case SS_PUSH_R2:
+					case SS_PUSH_R3:
+					case SS_PUSH_R4:
+					case SS_PUSH_R5:
+					case SS_PUSH_R6:
+					case SS_PUSH_R7:
+					{
+						int reg = itr->second - SS_PUSH_R0;
+						stackStr += QString("  |  PUSH r%1").arg(reg, 2, 16, QChar('0'));
+						break;
+					}
+					case SS_CALL:
+					{
+						callstack.push_back(stackStr);
+						stackStr += "  |  CALL";
+						break;
+					}
+				}
+				stack.push_back(stackStr);
+			}
+			stackModel->setStringList(stack);
+			callstackModel->setStringList(callstack);
+			break;
 		}
-		callstackModel->setStringList(callstack);
-		break;
-	}
+		case MM_REGISTERS:
+		{
+			registerModel->setStringList(registers);
+			break;
+		}
 	}
 }
 
