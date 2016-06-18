@@ -14,6 +14,8 @@ QMenuBar {
 
 QMenuBar::item {
 	background-color: #4E4E4E;
+	padding: 10px;
+	border: 1px solid #1E1E1E;
 }
 
 QMenuBar::item:selected {
@@ -68,7 +70,8 @@ QToolbar {
 QToolBar::separator {
 	border: 1px solid #4E4E4E;
 	border-right-color: lightgray;
-	width: 3px;
+	border-radius: 1px;
+	width: 2px;
     background: #1E1E1E;
     margin-left: 5px;
     margin-right: 5px;
@@ -136,6 +139,10 @@ QTabBar::tab:last:!selected {
 	border-right-color: lightgray;
 }
 
+QTabBar::tab:!selected:hover {
+	background-color: blue;
+}
+
 QTabBar::tab:only-one {
     margin-left: 0;
     margin-right: 0;
@@ -145,6 +152,5 @@ QPushButton {
 	font: large "Consolas";
 	font-size: 10pt;
 	background-color: #4E4E4E;
-	border: 1px solid gray;
 	color: white;
 }
