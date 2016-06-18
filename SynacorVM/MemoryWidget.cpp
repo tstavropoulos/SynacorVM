@@ -11,11 +11,15 @@
 #include <QStringListModel>
 
 MemoryWidget::MemoryWidget(QWidget *parent)
-	: QWidget(parent)
+	: QDockWidget("Memory", parent)
 {
-	QHBoxLayout *layout = new QHBoxLayout(this);
+	setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	setFeatures(DockWidgetMovable | DockWidgetFloatable);
+	QWidget *internalWidget = new QWidget(this);
 
-	QTabWidget *tabWidget = new QTabWidget(this);
+	QHBoxLayout *layout = new QHBoxLayout(internalWidget);
+
+	QTabWidget *tabWidget = new QTabWidget(internalWidget);
 	layout->addWidget(tabWidget);
 
 	QFont monoSpacedFont;
@@ -75,12 +79,15 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 
 	tabWidget->addTab(callstackPage, "Callstack");
 
-	setLayout(layout);
+	internalWidget->setLayout(layout);
 
 	for (int i = 0; i < MM_MAX_ELEM; i++)
 	{
 		memoryDirty[i] = false;
 	}
+
+	setWidget(internalWidget);
+	internalWidget->setMinimumWidth((parent->size().width() - 20) / 2);
 }
 
 void MemoryWidget::update(uint16_t address, uint16_t value)

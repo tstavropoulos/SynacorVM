@@ -8,9 +8,13 @@
 #include <QLineEdit>
 
 OutputWidget::OutputWidget(QWidget *parent)
-	: QWidget(parent)
+	: QDockWidget("Output", parent)
 {
-	QVBoxLayout *layout = new QVBoxLayout(this);
+	setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	setFeatures(DockWidgetMovable | DockWidgetFloatable);
+	QWidget *internalWidget = new QWidget(this);
+
+	QVBoxLayout *layout = new QVBoxLayout(internalWidget);
 
 	listView = new QListView(this);
 	listView->setUniformItemSizes(true);
@@ -31,14 +35,17 @@ OutputWidget::OutputWidget(QWidget *parent)
 	layout->addWidget(listView);
 	layout->addWidget(editWidget);
 
-	setLayout(layout);
+	internalWidget->setLayout(layout);
 
 	output << QString();
 
-	listModel = new QStringListModel(this);
+	listModel = new QStringListModel(internalWidget);
 	listView->setModel(listModel);
 
 	listModel->setStringList(output);
+
+	setWidget(internalWidget);
+	internalWidget->setMinimumWidth((parent->size().width() - 20) / 2);
 }
 
 void OutputWidget::lineEditReturn()

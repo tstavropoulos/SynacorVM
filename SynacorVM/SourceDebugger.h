@@ -3,13 +3,12 @@
 
 #include "SynacorVM.h"
 
-#include <QWidget>
-
 QT_BEGIN_NAMESPACE
 class QListView;
 class QFileDialog;
 class QToolBar;
 class QToolButton;
+class QMainWindow;
 QT_END_NAMESPACE
 
 class OutputWidget;
@@ -17,11 +16,11 @@ class MemoryWidget;
 class AssemblyWidget;
 
 
-class SourceDebugger : public QWidget
+class SourceDebugger : public QObject
 {
 	Q_OBJECT
 public:
-	SourceDebugger(QWidget *parent);
+	SourceDebugger(QMainWindow *parent);
 
 	void loadfile(const QString &filepath);
 
@@ -58,6 +57,8 @@ protected:
 	QToolButton *toolbutton;
 
 	DebuggerState DState;
+
+	QMainWindow *parentWindow;
 
 };
 

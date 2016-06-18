@@ -14,7 +14,6 @@ MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
     sourceDebugger_ = new SourceDebugger(this);
-    setCentralWidget(sourceDebugger_);
 
 	//Load Stylesheet
 	QFile styleFile(":/DarkTheme.qss");

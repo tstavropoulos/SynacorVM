@@ -9,8 +9,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
@@ -19,13 +17,15 @@
 #include <QtConcurrent>
 #include <QToolBar>
 #include <QToolButton>
+#include <QMainWindow>
 
 #include <QMessageBox>
 
 
-SourceDebugger::SourceDebugger(QWidget *parent)
-	: QWidget(parent)
+SourceDebugger::SourceDebugger(QMainWindow *parent)
+	: QObject(parent)
 	, DState(DS_NOT_RUN)
+	, parentWindow (parent)
 {
 	qRegisterMetaType<DebuggerState>("DebuggerState");
 	qRegisterMetaType<VMErrors>("VMErrors");
@@ -33,7 +33,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	setObjectName("mainWidget");
 
-	toolbar = new QToolBar(this);
+	toolbar = new QToolBar(parent);
 
 	QAction *loadAction = new QAction("&Open", this);
 	loadAction->setIcon(QIcon(":/Open.png"));
@@ -72,26 +72,20 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	toolbar->addAction(stepOutAction);
 	connect(stepOutAction, SIGNAL(triggered()), this, SLOT(stepOut()));
 
-	QVBoxLayout *superLayout = new QVBoxLayout(this);
+	parent->addToolBar(Qt::TopToolBarArea, toolbar);
 
-	superLayout->addWidget(toolbar);
+	outputWidget = new OutputWidget(parentWindow);
+	assemblyWidget = new AssemblyWidget(parentWindow);
+	memoryWidget = new MemoryWidget(parentWindow);
 
-	QHBoxLayout *mainLayout = new QHBoxLayout();
-	superLayout->addLayout(mainLayout);
+	parent->addDockWidget(Qt::LeftDockWidgetArea, outputWidget);
+	parent->addDockWidget(Qt::RightDockWidgetArea, assemblyWidget);
+	parent->addDockWidget(Qt::RightDockWidgetArea, memoryWidget);
 
-	outputWidget = new OutputWidget(this);
 
-	assemblyWidget = new AssemblyWidget(this);
-	memoryWidget = new MemoryWidget(this);
-
-	QVBoxLayout *rightSideLayout = new QVBoxLayout();
-	rightSideLayout->addWidget(assemblyWidget);
-	rightSideLayout->addWidget(memoryWidget);
-
-	mainLayout->addWidget(outputWidget);
-	mainLayout->addLayout(rightSideLayout);
-
-	setLayout(superLayout);
+	QWidget *tmp = new QWidget(parent);
+	tmp->setMaximumSize(0, 0);
+	parent->setCentralWidget(tmp);
 
 	synacorVM = new SynacorVM(nullptr);
 
@@ -152,7 +146,7 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 void SourceDebugger::load()
 {
-	QString filepath = QFileDialog::getOpenFileName(this, QString("Select Synacor Binary File"), QString(), QString("*.bin"));
+	QString filepath = QFileDialog::getOpenFileName(parentWindow, QString("Select Synacor Binary File"), QString(), QString("*.bin"));
 
 	loadfile(filepath);
 }
@@ -202,21 +196,21 @@ void SourceDebugger::notifyError(VMErrors error)
 	{
 	case VME_RUN_NO_FILE_LOADED:
 	{
-		QMessageBox::warning(this,
+		QMessageBox::warning(parentWindow,
 			QString("Run Error"),
 			QString("You cannot run the program until you load a binary file."));
 		break;
 	}
 	case VME_RESET_NO_FILE_LOADED:
 	{
-		QMessageBox::warning(this,
+		QMessageBox::warning(parentWindow,
 			QString("Reset Error"),
 			QString("You cannot reset the program until you load a binary file."));
 		break;
 	}
 	default:
 	{
-		QMessageBox::warning(this,
+		QMessageBox::warning(parentWindow,
 			QString("Error Error"),
 			QString("This error message has not been implemented.  Error Code: %1").arg(error));
 		break;

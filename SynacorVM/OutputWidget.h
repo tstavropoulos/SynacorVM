@@ -1,7 +1,7 @@
 #ifndef OUTPUT_WIDGET_H_
 #define OUTPUT_WIDGET_H_
 
-#include <QWidget>
+#include <QDockWidget>
 
 QT_BEGIN_NAMESPACE
 class QListView;
@@ -9,7 +9,7 @@ class QStringListModel;
 class QLineEdit;
 QT_END_NAMESPACE
 
-class OutputWidget : public QWidget
+class OutputWidget : public QDockWidget
 {
 	Q_OBJECT
 public:

@@ -1,7 +1,7 @@
 #ifndef MEMORY_WIDGET_H_
 #define MEMORY_WIDGET_H_
 
-#include <QWidget>
+#include <QDockWidget>
 
 
 QT_BEGIN_NAMESPACE
@@ -18,7 +18,7 @@ enum MemoryModule
 	MM_MAX_ELEM
 };
 
-class MemoryWidget : public QWidget
+class MemoryWidget : public QDockWidget
 {
 	Q_OBJECT
 public:

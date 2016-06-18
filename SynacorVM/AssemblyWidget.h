@@ -1,14 +1,14 @@
 #ifndef ASSEMBLY_WIDGET_H_
 #define ASSEMBLY_WIDGET_H_
 
-#include <QWidget>
+#include <QDockWidget>
 
 QT_BEGIN_NAMESPACE
 class QListView;
 class QStringListModel;
 QT_END_NAMESPACE
 
-class AssemblyWidget : public QWidget
+class AssemblyWidget : public QDockWidget
 {
 	Q_OBJECT
 public:

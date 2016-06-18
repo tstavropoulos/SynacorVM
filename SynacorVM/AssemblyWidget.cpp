@@ -10,9 +10,13 @@
 #include <QMessageBox>
 
 AssemblyWidget::AssemblyWidget(QWidget *parent)
-	: QWidget(parent), loaded(false), currentExecAddress(0)
+	: QDockWidget("Dissassembly", parent), loaded(false), currentExecAddress(0)
 {
-	QHBoxLayout *layout = new QHBoxLayout(this);
+	setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	setFeatures(DockWidgetMovable | DockWidgetFloatable);
+	QWidget *internalWidget = new QWidget(this);
+
+	QHBoxLayout *layout = new QHBoxLayout(internalWidget);
 
 	breakpoints = std::vector<bool>(c_dwAddressSpace, false);
 
@@ -24,14 +28,17 @@ AssemblyWidget::AssemblyWidget(QWidget *parent)
 	listView->setFont(monoSpacedFont);
 	layout->addWidget(listView);
 
-	setLayout(layout);
+	internalWidget->setLayout(layout);
 
-	listModel = new QStringListModel(this);
+	listModel = new QStringListModel(internalWidget);
 	listView->setModel(listModel);
 	listView->setMovement(QListView::Static);
 	listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 	connect(listView, SIGNAL(doubleClicked(const QModelIndex&)), this, SLOT(operationBreakToggled(const QModelIndex&)));
+
+	setWidget(internalWidget);
+	internalWidget->setMinimumWidth((parent->size().width() - 20) / 2);
 }
 
 void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringList &arguments, const std::vector<uint16_t> &instrAddress)
