@@ -42,11 +42,6 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	toolbar->addSeparator();
 
-	QAction *reduceAction = new QAction("R&educe", this);
-	reduceAction->setIcon(QIcon(":/Reduce.png"));
-	toolbar->addAction(reduceAction);
-	connect(reduceAction, SIGNAL(triggered()), this, SLOT(reduce()));
-
 	QAction *resetAction = new QAction("Re&set", this);
 	resetAction->setIcon(QIcon(":/Reset.png"));
 	toolbar->addAction(resetAction);
@@ -194,11 +189,6 @@ void SourceDebugger::loadfile(const QString &filepath)
 		//Pass a copy of the memory to the MemoryWidget
 		memoryWidget->load(memory);
 	}
-}
-
-void SourceDebugger::reduce()
-{
-	assemblyWidget->reduce();
 }
 
 void SourceDebugger::exit()

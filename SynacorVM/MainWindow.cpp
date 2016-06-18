@@ -44,12 +44,6 @@ void MainWindow::createMenus()
 
 	fileMenu->addSeparator();
 
-	QAction *reduceAction = new QAction("R&educe", this);
-	fileMenu->addAction(reduceAction);
-	connect(reduceAction, SIGNAL(triggered()), sourceDebugger_, SLOT(reduce()));
-
-	fileMenu->addSeparator();
-
 	QAction *exitAction = new QAction("E&xit", this);
 	fileMenu->addAction(exitAction);
 	connect(exitAction, SIGNAL(triggered()), sourceDebugger_, SLOT(exit()));

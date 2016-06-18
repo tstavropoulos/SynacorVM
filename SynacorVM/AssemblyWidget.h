@@ -14,12 +14,9 @@ class AssemblyWidget : public QWidget
 public:
 	AssemblyWidget(QWidget *parent);
 	void setAssembly(const QStringList &instructions, const QStringList &arguments, const std::vector<uint16_t> &instrAddress);
-	void reduce();
 
 protected:
 	void rebuild();
-	void rebuildSimple();
-	void rebuildReduced();
 
 	QListView *listView;
 	QStringListModel *listModel;
@@ -30,16 +27,12 @@ protected:
 	//The instruction order of the whole data set
 	std::vector<uint16_t> instrAddress;
 
-	//The instruction order of the Current data
-	std::vector<uint16_t> currentInstrAddress;
-
 	//The string list currently rendered in the model
 	QStringList currentAssembly;
 
 	std::vector<bool> breakpoints;
 
 	bool loaded;
-	bool showReduced;
 	uint16_t currentExecAddress;
 
 public slots:

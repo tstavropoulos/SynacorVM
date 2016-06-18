@@ -9,7 +9,6 @@
         <file alias="StepInto.png">../Assets/StepInto.png</file>
         <file alias="StepOver.png">../Assets/StepOver.png</file>
         <file alias="StepOut.png">../Assets/StepOut.png</file>
-        <file alias="Reduce.png">../Assets/Reduce.png</file>
         <file alias="DarkTheme.qss">../Assets/DarkTheme.qss</file>
     </qresource>
 </RCC>
