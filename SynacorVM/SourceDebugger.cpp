@@ -28,6 +28,9 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	, DState(DS_NOT_RUN)
 {
 	qRegisterMetaType<DebuggerState>("DebuggerState");
+	qRegisterMetaType<VMErrors>("VMErrors");
+
+
 	setObjectName("mainWidget");
 
 	toolbar = new QToolBar(this);
