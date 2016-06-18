@@ -65,6 +65,15 @@ QToolbar {
 	font-size: 10pt;
 }
 
+QToolBar::separator {
+	border: 1px solid #4E4E4E;
+	border-right-color: lightgray;
+	width: 3px;
+    background: #1E1E1E;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
 QToolButton {
 	font: bold large "Consolas";
 	font-size: 10pt;

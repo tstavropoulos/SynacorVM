@@ -32,12 +32,14 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	toolbar = new QToolBar(this);
 
 	QAction *loadAction = new QAction("&Open", this);
+	loadAction->setIcon(QIcon(":/Open.png"));
 	toolbar->addAction(loadAction);
 	connect(loadAction, SIGNAL(triggered()), this, SLOT(load()));
 
 	toolbar->addSeparator();
 
 	QAction *reduceAction = new QAction("R&educe", this);
+	reduceAction->setIcon(QIcon(":/Reduce.png"));
 	toolbar->addAction(reduceAction);
 	connect(reduceAction, SIGNAL(triggered()), this, SLOT(reduce()));
 
