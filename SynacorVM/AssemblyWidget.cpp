@@ -17,6 +17,7 @@ AssemblyWidget::AssemblyWidget(QWidget *parent)
 	breakpoints = std::vector<bool>(c_dwAddressSpace, false);
 
 	listView = new QListView(this);
+	listView->setUniformItemSizes(true);
 	QFont monoSpacedFont;
 	monoSpacedFont.setStyleHint(QFont::Monospace);
 	monoSpacedFont.setFamily("Consolas");

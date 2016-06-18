@@ -25,6 +25,7 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	QWidget *memoryPage = new QWidget();
 	memoryPage->setLayout(new QHBoxLayout(memoryPage));
 	memoryView = new QListView(memoryPage);
+	memoryView->setUniformItemSizes(true);
 	memoryPage->layout()->addWidget(memoryView);
 	memoryModel = new QStringListModel(memoryPage);
 	memoryView->setModel(memoryModel);
@@ -37,6 +38,7 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	QWidget *registerPage = new QWidget();
 	registerPage->setLayout(new QHBoxLayout(registerPage));
 	registerView = new QListView(registerPage);
+	registerView->setUniformItemSizes(true);
 	registerPage->layout()->addWidget(registerView);
 	registerModel = new QStringListModel(registerPage);
 	registerView->setModel(registerModel);
@@ -49,6 +51,7 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	QWidget *stackPage = new QWidget();
 	stackPage->setLayout(new QHBoxLayout(stackPage));
 	stackView = new QListView(stackPage);
+	stackView->setUniformItemSizes(true);
 	stackPage->layout()->addWidget(stackView);
 	stackModel = new QStringListModel(stackPage);
 	stackView->setModel(stackModel);
@@ -61,6 +64,7 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	QWidget *callstackPage = new QWidget();
 	callstackPage->setLayout(new QHBoxLayout(callstackPage));
 	callstackView = new QListView(callstackPage);
+	callstackView->setUniformItemSizes(true);
 	callstackPage->layout()->addWidget(callstackView);
 	callstackModel = new QStringListModel(callstackPage);
 	callstackView->setModel(callstackModel);

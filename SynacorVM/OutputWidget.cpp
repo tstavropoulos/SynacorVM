@@ -13,6 +13,7 @@ OutputWidget::OutputWidget(QWidget *parent)
 	QVBoxLayout *layout = new QVBoxLayout(this);
 
 	listView = new QListView(this);
+	listView->setUniformItemSizes(true);
 	QFont monoSpacedFont;
 	monoSpacedFont.setStyleHint(QFont::Monospace);
 	monoSpacedFont.setFamily("Consolas");
