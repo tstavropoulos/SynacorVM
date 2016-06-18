@@ -72,6 +72,10 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	toolbar->addAction(stepOverAction);
 	connect(stepOverAction, SIGNAL(triggered()), this, SLOT(stepOver()));
 
+	QAction *stepOutAction = new QAction("Step Ou&t", this);
+	stepOutAction->setIcon(QIcon(":/StepOut.png"));
+	toolbar->addAction(stepOutAction);
+	connect(stepOutAction, SIGNAL(triggered()), this, SLOT(stepOut()));
 
 	QVBoxLayout *superLayout = new QVBoxLayout(this);
 
@@ -314,4 +318,9 @@ void SourceDebugger::stepInto()
 void SourceDebugger::stepOver()
 {
 	synacorVM->stepOver();
+}
+
+void SourceDebugger::stepOut()
+{
+	synacorVM->stepOut();
 }

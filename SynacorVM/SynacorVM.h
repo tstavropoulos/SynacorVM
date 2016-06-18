@@ -12,6 +12,7 @@ enum VMState
 	VMS_BREAK,
 	VMS_STEP_INTO,
 	VMS_STEP_OVER,
+	VMS_STEP_OUT,
 	VMS_MAX
 };
 
@@ -72,6 +73,8 @@ protected:
 	int numReturnsUntilStepOverEnds;
 	bool ignoreNextBreakpoint;
 
+	int stepOutCallDepth;
+
 public slots:
 	//System Slots
 	void activateVM();
@@ -81,6 +84,7 @@ public slots:
 	void updateInput(const QString &input);
 	void stepInto();
 	void stepOver();
+	void stepOut();
 	void aboutToQuit();
 
 	//Memory Slots

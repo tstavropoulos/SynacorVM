@@ -86,6 +86,11 @@ void MainWindow::createMenus()
 	stepOverAction->setShortcut(QKeySequence(tr("F10", "Step &Over")));
 	debugMenu->addAction(stepOverAction);
 	connect(stepOverAction, SIGNAL(triggered()), sourceDebugger_, SLOT(stepOver()));
+
+	QAction *stepOutAction = new QAction("Step Ou&t", this);
+	stepOutAction->setShortcut(QKeySequence(tr("Shift+F11", "Step Ou&t")));
+	debugMenu->addAction(stepOutAction);
+	connect(stepOutAction, SIGNAL(triggered()), sourceDebugger_, SLOT(stepOut()));
 }
 
 

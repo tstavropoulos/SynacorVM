@@ -22,6 +22,7 @@ SynacorVM::SynacorVM(QObject *parent)
 	, loaded(false)
 	, numReturnsUntilStepOverEnds(0)
 	, ignoreNextBreakpoint(false)
+	, stepOutCallDepth(0)
 	, quitting(false)
 	, started(false)
 {
@@ -183,7 +184,7 @@ void SynacorVM::stepInto()
 		return;
 	}
 	state = VMS_STEP_INTO;
-	ignoreNextBreakpoint = true;
+	ignoreNextBreakpoint = breakpoints[inst];
 }
 
 void SynacorVM::stepOver()
@@ -203,7 +204,19 @@ void SynacorVM::stepOver()
 		state = VMS_STEP_OVER;
 		numReturnsUntilStepOverEnds = 1;
 	}
-	ignoreNextBreakpoint = true;
+	ignoreNextBreakpoint = breakpoints[inst];
+}
+
+void SynacorVM::stepOut()
+{
+	if (state != VMS_BREAK)
+	{
+		return;
+	}
+
+	state = VMS_STEP_OUT;
+	stepOutCallDepth = 1;
+	ignoreNextBreakpoint = breakpoints[inst];
 }
 
 void SynacorVM::load(const std::vector<uint16_t> &buffer)
@@ -217,7 +230,7 @@ void SynacorVM::load(const std::vector<uint16_t> &buffer)
 
 static bool IsRunningState(VMState state)
 {
-	return state == VMS_RUNNING || state == VMS_STEP_INTO || state == VMS_STEP_OVER;
+	return state == VMS_RUNNING || state == VMS_STEP_INTO || state == VMS_STEP_OVER || state == VMS_STEP_OUT;
 }
 
 void SynacorVM::updateExec()
@@ -233,25 +246,23 @@ void SynacorVM::updateExec()
 	case VMS_RUNNING:
 	case VMS_STEP_INTO:
 	case VMS_STEP_OVER:
+	case VMS_STEP_OUT:
 	{
-		if (IsRunningState(state))
+		if (breakpoints[inst] && !ignoreNextBreakpoint)
 		{
-			if (breakpoints[inst] && !ignoreNextBreakpoint)
-			{
-				emit updatePointer(inst);
-				emit newDebuggerState(DS_PAUSED);
-				state = VMS_BREAK;
-				break;
-			}
-			ignoreNextBreakpoint = false;
+			emit updatePointer(inst);
+			emit newDebuggerState(DS_PAUSED);
+			state = VMS_BREAK;
+			break;
+		}
+		ignoreNextBreakpoint = false;
 
-			inst = handleOp(inst);
+		inst = handleOp(inst);
 
-			if (state == VMS_STEP_INTO)
-			{
-				emit updatePointer(inst);
-				state = VMS_BREAK;
-			}
+		if (state == VMS_STEP_INTO)
+		{
+			emit updatePointer(inst);
+			state = VMS_BREAK;
 		}
 
 		break;
@@ -532,6 +543,10 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		{
 			numReturnsUntilStepOverEnds++;
 		}
+		else if (state == VMS_STEP_OUT)
+		{
+			stepOutCallDepth++;
+		}
 		break;
 	}
 
@@ -559,6 +574,14 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 			if (state == VMS_STEP_OVER)
 			{
 				if (--numReturnsUntilStepOverEnds == 0)
+				{
+					state = VMS_BREAK;
+					emit updatePointer(tempInst);
+				}
+			}
+			else if (state == VMS_STEP_OUT)
+			{
+				if (--stepOutCallDepth == 0)
 				{
 					state = VMS_BREAK;
 					emit updatePointer(tempInst);

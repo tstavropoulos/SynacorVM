@@ -36,6 +36,7 @@ public slots:
 	void pause();
 	void stepInto();
 	void stepOver();
+	void stepOut();
 
 	void updateDebuggerState(DebuggerState dState);
 
