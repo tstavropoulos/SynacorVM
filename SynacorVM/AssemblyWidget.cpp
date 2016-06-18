@@ -48,21 +48,29 @@ void AssemblyWidget::setAssembly(const QStringList &instructions, const QStringL
 
 void AssemblyWidget::rebuild()
 {
-	currentAssembly.clear();
+	if (listModel->rowCount() < instr.length())
+	{
+		listModel->insertRows(listModel->rowCount(), instr.length() - listModel->rowCount());
+		for (int i = currentAssembly.length(); i < instr.length(); i++)
+		{
+			currentAssembly.append(QString());
+		}
+	}
+
 	for (int i = 0; i < instr.length(); i++)
 	{
-		if (instr[i] == "")
-		{
-			break;
-		}
 		uint16_t curInstAddr = instrAddress[i];
-		currentAssembly << QString("%1%2  %3:\t")
+		QString newLineText = QString("%1%2  %3:\t")
 			.arg((curInstAddr == currentExecAddress) ? ">" : " ")
 			.arg(breakpoints[curInstAddr] ? "*" : " ")
 			.arg(curInstAddr, 4, 16, QChar('0'))
 			+ instr[i] + " " + args[i];
+		if (currentAssembly[i] != newLineText)
+		{
+			currentAssembly[i] = newLineText;
+			listModel->setData(listModel->index(i), currentAssembly[i]);
+		}
 	}
-	listModel->setStringList(currentAssembly);
 }
 
 void AssemblyWidget::operationBreakToggled(const QModelIndex &index)
