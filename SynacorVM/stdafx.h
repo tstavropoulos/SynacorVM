@@ -4,7 +4,12 @@
 
 //stl Includes
 #include <vector>
-#include <stdint.h>
+#include <unordered_set>
+#include <unordered_map>
+#include <string>
+#include <cctype>
+#include <cstdint>
+#include <cmath>
 
 //Qt Includes
 #include <QApplication>

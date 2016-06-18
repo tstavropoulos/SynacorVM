@@ -49,9 +49,10 @@ protected:
 	QStringList stack;
 	QStringList callstack;
 
-	std::map<uint16_t, uint16_t> pendingMemoryUpdates;
+	std::unordered_map<uint16_t, uint16_t> pendingMemoryUpdates;
 	std::vector<uint16_t> rawStack;
 	std::vector<uint16_t> rawCallstack;
+	std::vector<uint16_t> rawMemory;
 
 	uint16_t inst;
 
