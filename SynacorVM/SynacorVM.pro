@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui widgets concurrent
+QT += core gui widgets winextras
 DEPENDPATH += .
 INCLUDEPATH += .
 

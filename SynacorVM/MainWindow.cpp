@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     sourceDebugger_ = new SourceDebugger(this);
 
+	setWindowIcon(QIcon(":/Play.png"));
+
 	//Load Stylesheet
 	QFile styleFile(":/DarkTheme.qss");
 	styleFile.open(QFile::ReadOnly);
@@ -30,6 +32,19 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(this, SIGNAL(aboutToQuit()), sourceDebugger_, SIGNAL(aboutToQuit()));
 
     resize(1600, 800);
+
+
+	//Load a file from a commandline argument
+	bool argFileFound = false;
+	for (int i = 1; i < QCoreApplication::arguments().size(); i++)
+	{
+		const QString arg = QCoreApplication::arguments().at(i);
+		if (!arg.isEmpty() && arg.at(0) != '-' && QFile(arg).exists())
+		{
+			sourceDebugger_->loadfile(arg);
+			break;
+		}
+	}
 }
 
 void MainWindow::createMenus()

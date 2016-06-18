@@ -14,10 +14,10 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QApplication>
-#include <QtConcurrent>
 #include <QToolBar>
 #include <QToolButton>
 #include <QMainWindow>
+#include <QThread>
 
 #include <QMessageBox>
 
