@@ -111,17 +111,26 @@ void SynacorVM::reset()
 	started = false;
 }
 
+void SynacorVM::activateVM()
+{
+	updateForever();
+}
+
 void SynacorVM::updateForever()
 {
 	int execCounter = 0;
-	while (!quitting)
+
+	forever
 	{
+		if (quitting)
+		{
+			break;
+		}
 		updateExec();
 		if (++execCounter > 10)
 		{
 			execCounter = 0;
 			QCoreApplication::processEvents();
-			QThread::yieldCurrentThread();
 		}
 	}
 }

@@ -41,6 +41,8 @@ public slots:
 
 signals:
 	void aboutToQuit();
+	void activateVM();
+	void pauseVM(bool pause);
 
 protected:
 	OutputWidget *outputWidget;

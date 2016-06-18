@@ -90,7 +90,11 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	setLayout(superLayout);
 
-	synacorVM = new SynacorVM(this);
+	synacorVM = new SynacorVM(nullptr);
+
+	QThread *VMThread = new QThread(this);
+	synacorVM->moveToThread(VMThread);
+
 
 	//Connect signals from Assembly Widget to VM
 	connect(assemblyWidget, SIGNAL(setBreakpoint(uint16_t, bool)), synacorVM, SLOT(setBreakpoint(uint16_t, bool)));
@@ -104,6 +108,8 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 
 	//Connect signals from UI to VM
 	connect(this, SIGNAL(aboutToQuit()), synacorVM, SLOT(aboutToQuit()));
+	connect(this, SIGNAL(pauseVM(bool)), synacorVM, SLOT(pause(bool)));
+	connect(this, SIGNAL(activateVM()), synacorVM, SLOT(activateVM()));
 
 	//Connect signals from VM to Output Widget
 	connect(synacorVM, SIGNAL(print(const QString&)), outputWidget, SLOT(print(const QString&)));
@@ -135,7 +141,10 @@ SourceDebugger::SourceDebugger(QWidget *parent)
 	connect(memoryWidget, SIGNAL(refreshAssembly()), this, SLOT(refreshAssembly()));
 
 	//Run our VM updates endlessly
-	QFuture<void> future = QtConcurrent::run(QThreadPool::globalInstance(), synacorVM, &SynacorVM::updateForever);
+	//QFuture<void> future = QtConcurrent::run(QThreadPool::globalInstance(), synacorVM, &SynacorVM::updateForever);
+
+	VMThread->start();
+	emit activateVM();
 }
 
 void SourceDebugger::load()
@@ -277,10 +286,10 @@ void SourceDebugger::resume()
 	{
 	case DS_NOT_RUN:
 	case DS_PAUSED:
-		synacorVM->pause(false);
+		emit pauseVM(false);
 		break;
 	case DS_RUNNING:
-		synacorVM->pause(false);
+		emit pauseVM(true);
 		break;
 	case DS_HALTED:
 		//doNothing
@@ -290,7 +299,7 @@ void SourceDebugger::resume()
 
 void SourceDebugger::pause()
 {
-	synacorVM->pause(true);
+	emit pauseVM(true);
 }
 
 void SourceDebugger::stepInto()

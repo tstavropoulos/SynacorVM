@@ -74,6 +74,7 @@ protected:
 
 public slots:
 	//System Slots
+	void activateVM();
 	void reset();
 	void pause(bool pause);
 	void updateExec();
