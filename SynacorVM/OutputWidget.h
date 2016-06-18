@@ -4,9 +4,8 @@
 #include <QDockWidget>
 
 QT_BEGIN_NAMESPACE
-class QListView;
-class QStringListModel;
 class QLineEdit;
+class QTextEdit;
 QT_END_NAMESPACE
 
 class OutputWidget : public QDockWidget
@@ -16,9 +15,7 @@ public:
 	OutputWidget(QWidget *parent);
 
 protected:
-	QListView *listView;
-	QStringList output;
-	QStringListModel *listModel;
+	QTextEdit *outputView;
 	QLineEdit *editWidget;
 
 public slots:

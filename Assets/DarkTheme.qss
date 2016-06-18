@@ -46,12 +46,19 @@ QLabel {
 	background: #4E4E4E;
 }
 
+QTextEdit {
+	font: "Consolas";
+	font-size: 10pt;
+	border: 1px solid darkgray;
+	background-color: #1E1E1E;
+}
+
 QListView {
 	background: #1E1E1E;
 }
 
 QLineEdit {
-	font: bold large "Consolas";
+	font: "Consolas";
 	font-size: 12pt;
 	border: 1px solid darkgray;
 	background-color: #1E1E1E;

@@ -2,9 +2,8 @@
 
 #include "OutputWidget.h"
 
-#include <QListView>
+#include <QTextEdit>
 #include <QVBoxLayout>
-#include <QStringListModel>
 #include <QLineEdit>
 
 OutputWidget::OutputWidget(QWidget *parent)
@@ -16,33 +15,25 @@ OutputWidget::OutputWidget(QWidget *parent)
 
 	QVBoxLayout *layout = new QVBoxLayout(internalWidget);
 
-	listView = new QListView(this);
-	listView->setUniformItemSizes(true);
+	outputView = new QTextEdit(this);
+
 	QFont monoSpacedFont;
 	monoSpacedFont.setStyleHint(QFont::Monospace);
 	monoSpacedFont.setFamily("Consolas");
-	listView->setFont(monoSpacedFont);
+	outputView->setFont(monoSpacedFont);
 
-	listView->setMovement(QListView::Static);
-	listView->setWordWrap(true);
-	listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+	//outputView->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+	outputView->setReadOnly(true);
 
 	editWidget = new QLineEdit(this);
 	editWidget->setFont(monoSpacedFont);
 
 	connect(editWidget, SIGNAL(returnPressed()), this, SLOT(lineEditReturn()));
 
-	layout->addWidget(listView);
+	layout->addWidget(outputView);
 	layout->addWidget(editWidget);
 
 	internalWidget->setLayout(layout);
-
-	output << QString();
-
-	listModel = new QStringListModel(internalWidget);
-	listView->setModel(listModel);
-
-	listModel->setStringList(output);
 
 	setWidget(internalWidget);
 	internalWidget->setMinimumWidth((parent->size().width() - 20) / 2);
@@ -61,29 +52,12 @@ void OutputWidget::lineEditReturn()
 
 void OutputWidget::print(const QString &line)
 {
-	for (int i = 0; i < line.length(); i++)
-	{
-		if (line[i] == char(10))
-		{
-			output << QString();
-		}
-		else
-		{
-			output.back() += line[i];
-		}
-	}
-	
-	listModel->setStringList(output);
-
-	listView->scrollToBottom();
-
+	outputView->moveCursor(QTextCursor::End);
+	outputView->insertPlainText(line);
+	outputView->ensureCursorVisible();
 }
 
 void OutputWidget::clear()
 {
-	output.clear();
-
-	output << QString();
-
-	listModel->setStringList(output);
+	outputView->setPlainText(QString());
 }
