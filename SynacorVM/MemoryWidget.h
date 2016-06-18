@@ -55,6 +55,7 @@ protected:
 	std::vector<uint16_t> rawMemory;
 
 	uint16_t inst;
+	uint16_t callAddr;
 
 public slots:
 	//VM Slots
@@ -62,6 +63,7 @@ public slots:
 	void updateRegister(uint16_t reg, uint16_t value);
 	void pushStack(uint16_t value, StackSource source);
 	void popStack();
+	void setCallAddress(uint16_t address);
 	void updatePointer(uint16_t address);
 
 	//System Slots

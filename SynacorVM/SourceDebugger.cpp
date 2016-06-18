@@ -120,6 +120,7 @@ SourceDebugger::SourceDebugger(QMainWindow *parent)
 	connect(synacorVM, SIGNAL(updateRegister(uint16_t, uint16_t)), memoryWidget, SLOT(updateRegister(uint16_t, uint16_t)));
 	connect(synacorVM, SIGNAL(pushStack(uint16_t, StackSource)), memoryWidget, SLOT(pushStack(uint16_t, StackSource)));
 	connect(synacorVM, SIGNAL(popStack()), memoryWidget, SLOT(popStack()));
+	connect(synacorVM, SIGNAL(setCallAddress(uint16_t)), memoryWidget, SLOT(setCallAddress(uint16_t)));
 	connect(synacorVM, SIGNAL(updatePointer(uint16_t)), memoryWidget, SLOT(updatePointer(uint16_t)));
 
 	//Connect signals from Memory Widget for modifying VM

@@ -124,6 +124,7 @@ signals:
 	void updateRegister(uint16_t reg, uint16_t value);
 	void pushStack(uint16_t value, StackSource source);
 	void popStack();
+	void setCallAddress(uint16_t address);
 
 	//Assembly Signals
 	void updatePointer(uint16_t address);

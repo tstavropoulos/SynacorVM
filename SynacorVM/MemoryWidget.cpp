@@ -258,6 +258,11 @@ void MemoryWidget::popStack()
 	flagDirty(MM_STACK);
 }
 
+void MemoryWidget::setCallAddress(uint16_t address)
+{
+	callAddr = address;
+}
+
 void MemoryWidget::refreshView(MemoryModule module)
 {
 	switch (module)
@@ -272,6 +277,11 @@ void MemoryWidget::refreshView(MemoryModule module)
 		{
 			stack.clear();
 			callstack.clear();
+
+			// The most recently called address is going to be the top of the callstack,
+			// since that is where we are currently executing from.
+			callstack.push_back(QString("%1").arg(callAddr, 4, 16, QChar('0')));
+
 			for (auto itr = rawStack.rbegin(); itr != rawStack.rend(); itr++)
 			{
 				QString stackStr = QString("%1").arg(itr->first, 4, 16, QChar('0'));
