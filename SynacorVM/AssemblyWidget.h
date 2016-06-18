@@ -6,6 +6,7 @@
 QT_BEGIN_NAMESPACE
 class QListView;
 class QStringListModel;
+class RowColorStringListModel;
 QT_END_NAMESPACE
 
 class AssemblyWidget : public QDockWidget
@@ -19,7 +20,7 @@ protected:
 	void rebuild();
 
 	QListView *listView;
-	QStringListModel *listModel;
+	RowColorStringListModel *listModel;
 
 	QStringList instr;
 	QStringList args;
@@ -34,6 +35,8 @@ protected:
 
 	bool loaded;
 	uint16_t currentExecAddress;
+
+	uint16_t recentJumpAddress;
 
 public slots:
 	void operationBreakToggled(const QModelIndex &index);

@@ -333,5 +333,6 @@ void MemoryWidget::callstackClicked(const QModelIndex &index)
 		return;
 	}
 
-	emit scrollToInstruction(callstack[index.row()].toInt(nullptr, 16));
+	uint16_t address = callstack[index.row()].toInt(nullptr, 16);
+	emit scrollToInstruction(address);
 }
