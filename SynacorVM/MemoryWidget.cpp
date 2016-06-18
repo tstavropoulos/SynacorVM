@@ -4,11 +4,14 @@
 #include "SynacorVM.h"
 
 #include <assert.h>
+#include <mutex>
 
 #include <QListView>
 #include <QHBoxLayout>
 #include <QTabWidget>
 #include <QStringListModel>
+
+std::mutex mtxMemoryLock;
 
 MemoryWidget::MemoryWidget(QWidget *parent)
 	: QDockWidget("Memory", parent)
@@ -92,6 +95,8 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 
 void MemoryWidget::update(uint16_t address, uint16_t value)
 {
+	std::lock_guard<std::mutex> lock(mtxMemoryLock);
+
 	pendingMemoryUpdates[address] = value;
 }
 
@@ -136,6 +141,8 @@ static QString GetMemoryRowAt(const std::vector<uint16_t> &buffer, int address)
 
 void MemoryWidget::load(const std::vector<uint16_t> &buffer)
 {
+	std::lock_guard<std::mutex> lock(mtxMemoryLock);
+
 	memory.clear();
 	for (int address = 0; address < buffer.size(); address += VALUES_PER_LINE)
 	{
@@ -192,6 +199,8 @@ void MemoryWidget::updatePointer(uint16_t address)
 
 void MemoryWidget::update()
 {
+	std::lock_guard<std::mutex> lock(mtxMemoryLock);
+
 	std::unordered_set<int> modifiedRows;
 	modifiedRows.reserve(pendingMemoryUpdates.size());
 	for (auto itr = pendingMemoryUpdates.begin(); itr != pendingMemoryUpdates.end(); itr++)
