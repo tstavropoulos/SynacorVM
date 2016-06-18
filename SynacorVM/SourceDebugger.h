@@ -22,7 +22,7 @@ class SourceDebugger : public QObject
 public:
 	SourceDebugger(QMainWindow *parent);
 
-	void loadfile(const QString &filepath);
+	bool loadfile(const QString &filepath);
 
 public slots:
 	void load();

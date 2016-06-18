@@ -41,8 +41,10 @@ MainWindow::MainWindow(QWidget *parent)
 		const QString arg = QCoreApplication::arguments().at(i);
 		if (!arg.isEmpty() && arg.at(0) != '-' && QFile(arg).exists())
 		{
-			sourceDebugger_->loadfile(arg);
-			break;
+			if (sourceDebugger_->loadfile(arg))
+			{
+				break;
+			}
 		}
 	}
 }

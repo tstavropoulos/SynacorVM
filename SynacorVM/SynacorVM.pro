@@ -8,7 +8,7 @@ QT += core gui widgets winextras
 DEPENDPATH += .
 INCLUDEPATH += .
 
-TARGET = Synacor
+TARGET = SynacorDebugger
 TEMPLATE = app
 
 CONFIG += precompile_header

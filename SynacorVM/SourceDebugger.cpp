@@ -150,38 +150,41 @@ void SourceDebugger::load()
 	loadfile(filepath);
 }
 
-void SourceDebugger::loadfile(const QString &filepath)
+bool SourceDebugger::loadfile(const QString &filepath)
 {
-	if (!filepath.isEmpty())
+	if (filepath.isEmpty())
 	{
-
-		std::ifstream in(filepath.toStdString(), std::ifstream::in | std::ifstream::binary);
-		if (!in.good())
-		{
-			std::cout << "Failed to open file: " << filepath.toStdString() << std::endl;
-			return;
-		}
-
-		std::vector<uint16_t> memory(c_dwAddressSpace);
-
-		size_t dwCurOffset = 0;
-		while (in.good())
-		{
-			in.read((char *)&memory[dwCurOffset++], sizeof(uint16_t));
-		}
-
-		synacorVM->load(memory);
-
-		//Update the AssemblyWidget
-		QStringList instr, args;
-		std::vector<uint16_t> instrNum;
-
-		synacorVM->getAssembly(instr, args, instrNum);
-		assemblyWidget->setAssembly(instr, args, instrNum);
-
-		//Pass a copy of the memory to the MemoryWidget
-		memoryWidget->load(memory);
+		return false;
 	}
+
+	std::ifstream in(filepath.toStdString(), std::ifstream::in | std::ifstream::binary);
+	if (!in.good())
+	{
+		std::cout << "Failed to open file: " << filepath.toStdString() << std::endl;
+		return false;
+	}
+
+	std::vector<uint16_t> memory(c_dwAddressSpace);
+
+	size_t dwCurOffset = 0;
+	while (in.good())
+	{
+		in.read((char *)&memory[dwCurOffset++], sizeof(uint16_t));
+	}
+
+	synacorVM->load(memory);
+
+	//Update the AssemblyWidget
+	QStringList instr, args;
+	std::vector<uint16_t> instrNum;
+
+	synacorVM->getAssembly(instr, args, instrNum);
+	assemblyWidget->setAssembly(instr, args, instrNum);
+
+	//Pass a copy of the memory to the MemoryWidget
+	memoryWidget->load(memory);
+
+	return true;
 }
 
 void SourceDebugger::exit()

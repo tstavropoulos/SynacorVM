@@ -22,13 +22,15 @@ int main(int argc, char *argv[])
 	qRegisterMetaType<uint16_t>("uint16_t");
 
     QApplication a(argc, argv);
+	a.setApplicationName("SynacorDebugger");
+	a.setOrganizationName("DavidAndTrevor");
 
-	QString exeFileName = QCoreApplication::applicationFilePath();
-	exeFileName = exeFileName.right(exeFileName.length() - exeFileName.lastIndexOf("/") - 1);
-	QString appName = "SynacorVM";
+	QString displayName = QGuiApplication::applicationDisplayName();
+	QString filePath = QCoreApplication::applicationFilePath();
+	QString fileName = QFileInfo(filePath).fileName();
 
-	QSettings regApplications("HKEY_CURRENT_USER\\Software\\Classes\\Applications\\" + exeFileName, QSettings::NativeFormat);
-	regApplications.setValue("FriendlyAppName", appName);
+	QSettings regApplications("HKEY_CURRENT_USER\\Software\\Classes\\Applications\\" + fileName, QSettings::NativeFormat);
+	regApplications.setValue("FriendlyAppName", displayName);
 
 	regApplications.beginGroup("SupportedTypes");
 	regApplications.setValue(".bin", QString());
@@ -36,8 +38,8 @@ int main(int argc, char *argv[])
 
 	regApplications.beginGroup("shell");
 	regApplications.beginGroup("open");
-	regApplications.setValue("FriendlyAppName", appName);
-	regApplications.beginGroup("command");
+	regApplications.setValue("FriendlyAppName", displayName);
+	regApplications.beginGroup("Command");
 	regApplications.setValue(".", '"' + QDir::toNativeSeparators(QCoreApplication::applicationFilePath()) + "\" \"%1\"");
 	regApplications.endGroup();
 	regApplications.endGroup();
