@@ -62,6 +62,7 @@ build_pass::CONFIG(debug, debug|release) {
 
 CONFIG += embed_manifest_exe
 QMAKE_LFLAGS += /MACHINE:X64
+QMAKE_CXXFLAGS += /WX
 
 
 

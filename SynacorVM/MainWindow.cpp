@@ -33,9 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     resize(1600, 800);
 
-
 	//Load a file from a commandline argument
-	bool argFileFound = false;
 	for (int i = 1; i < QCoreApplication::arguments().size(); i++)
 	{
 		const QString arg = QCoreApplication::arguments().at(i);
