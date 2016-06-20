@@ -49,12 +49,39 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::createMenus()
 {
+	QSettings settings;
+
     fileMenu = menuBar()->addMenu(tr("&File"));
 	
     QAction *loadAction = new QAction("&Open", this);
 	loadAction->setShortcut(QKeySequence(tr("Ctrl+O", "File|&Open")));
     fileMenu->addAction(loadAction);
     connect(loadAction, SIGNAL(triggered()), sourceDebugger_, SLOT(load()));
+
+	QAction *saveStateAction = new QAction("&Save State", this);
+	saveStateAction->setShortcut(QKeySequence(tr("Ctrl+S", "File|&Save State")));
+	fileMenu->addAction(saveStateAction);
+	connect(saveStateAction, SIGNAL(triggered()), sourceDebugger_, SLOT(saveState()));
+
+	fileMenu->addSeparator();
+
+	for (int i = 0; i < MAX_RECENT_FILES; i++)
+	{
+		QString path = settings.value(QString("Recent/%1").arg(i)).toString();
+		if (!path.isEmpty())
+		{
+			QFileInfo file(path);
+			if (file.exists())
+			{
+				QString hotkey = QString("Ctrl+%1").arg(i + 1);
+
+				QAction *openRecentAction = new QAction(path, this);
+				fileMenu->addAction(openRecentAction);
+				openRecentAction->setShortcut(QKeySequence(tr(hotkey.toLatin1())));
+				connect(openRecentAction, SIGNAL(triggered()), new RecentOpener(sourceDebugger_, path), SLOT(load()));
+			}
+		}
+	}
 
 	fileMenu->addSeparator();
 

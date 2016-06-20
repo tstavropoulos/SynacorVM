@@ -80,7 +80,7 @@ protected:
 };
 
 AssemblyWidget::AssemblyWidget(QWidget *parent)
-	: QDockWidget("Dissassembly", parent), loaded(false), currentExecAddress(0), recentJumpAddress(0xFFFF)
+	: QDockWidget("Dissassembly", parent), loaded(false), currentExecAddress(0), pendingUpdatePointerAddress(0xFFFF), recentJumpAddress(0xFFFF)
 {
 	setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	setFeatures(DockWidgetMovable | DockWidgetFloatable);
@@ -135,6 +135,12 @@ void AssemblyWidget::rebuild()
 		}
 	}
 
+	for (auto itr = pendingBreakpointAddresses.begin(); itr != pendingBreakpointAddresses.end(); itr++)
+	{
+		updateBreakpoint(*itr, true);
+	}
+	pendingBreakpointAddresses.clear();
+
 	for (int i = 0; i < instr.length(); i++)
 	{
 		uint16_t curInstAddr = instrAddress[i];
@@ -167,12 +173,54 @@ void AssemblyWidget::operationBreakToggled(const QModelIndex &index)
 	listModel->setRowState(index.row(), RS_BREAKPOINT, breakpoints[instrNum]);
 }
 
-void AssemblyWidget::updatePointer(uint16_t address)
+void AssemblyWidget::updateBreakpoint(uint16_t address, bool set)
 {
-	if (address == currentExecAddress)
+	if (instrAddress.empty())
 	{
+		if (set)
+		{
+			pendingBreakpointAddresses.push_back(address);
+		}
+		else
+		{
+			auto itr = std::find(pendingBreakpointAddresses.begin(), pendingBreakpointAddresses.end(), address);
+			if (itr != pendingBreakpointAddresses.end())
+			{
+				pendingBreakpointAddresses.erase(itr);
+			}
+		}
 		return;
 	}
+
+	auto iter = std::lower_bound(instrAddress.begin(), instrAddress.end(), address);
+	uint16_t index = iter - instrAddress.begin();
+
+	const int instrNum = instrAddress[index];
+	breakpoints[instrNum] = set;
+
+	currentAssembly[index].replace(1, 1, (breakpoints[instrNum] ? "*" : " "));
+
+	listModel->setData(listModel->index(index), currentAssembly[index]);
+	listModel->setRowState(index, RS_BREAKPOINT, breakpoints[instrNum]);
+}
+
+void AssemblyWidget::updatePointerFromPending()
+{
+	if (pendingUpdatePointerAddress != 0xFFFF)
+	{
+		updatePointer(pendingUpdatePointerAddress);
+	}
+}
+
+void AssemblyWidget::updatePointer(uint16_t address)
+{
+	if (currentAssembly.empty())
+	{
+		pendingUpdatePointerAddress = address;
+		QTimer::singleShot(16, this, SLOT(updatePointerFromPending()));
+		return;
+	}
+	pendingUpdatePointerAddress = 0xFFFF;
 
 	auto iter = std::lower_bound(instrAddress.begin(), instrAddress.end(), currentExecAddress);
 	uint16_t oldIndex = iter - instrAddress.begin();

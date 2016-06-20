@@ -32,15 +32,19 @@ protected:
 	QStringList currentAssembly;
 
 	std::vector<bool> breakpoints;
+	std::vector<uint16_t> pendingBreakpointAddresses;
 
 	bool loaded;
 	uint16_t currentExecAddress;
+	uint16_t pendingUpdatePointerAddress;
 
 	uint16_t recentJumpAddress;
 
 public slots:
 	void operationBreakToggled(const QModelIndex &index);
+	void updateBreakpoint(uint16_t address, bool set);
 	void updatePointer(uint16_t address);
+	void updatePointerFromPending();
 	void scrollToInstruction(uint16_t address);
 
 signals:

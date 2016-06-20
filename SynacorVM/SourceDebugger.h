@@ -14,7 +14,25 @@ QT_END_NAMESPACE
 class OutputWidget;
 class MemoryWidget;
 class AssemblyWidget;
+class SourceDebugger;
 
+class RecentOpener : public QObject
+{
+	Q_OBJECT
+public:
+	RecentOpener(SourceDebugger *sourceDebugger, QString file)
+		: sourceDebugger(sourceDebugger)
+		, file(file)
+	{
+	}
+	
+public slots:
+	void load();
+
+protected:
+	SourceDebugger *sourceDebugger;
+	QString file;
+};
 
 class SourceDebugger : public QObject
 {
@@ -26,6 +44,7 @@ public:
 
 public slots:
 	void load();
+	void saveState();
 	void reset();
 	void refreshAssembly();
 	void exit();
@@ -35,6 +54,7 @@ public slots:
 	void stepInto();
 	void stepOver();
 	void stepOut();
+	void updateRecentPath(const QString &filepath);
 
 	void updateDebuggerState(DebuggerState dState);
 
@@ -42,6 +62,8 @@ signals:
 	void aboutToQuit();
 	void activateVM();
 	void pauseVM(bool pause);
+	void getSaveState(const QString &path);
+	void putLoadState(const QString &path);
 
 protected:
 	OutputWidget *outputWidget;

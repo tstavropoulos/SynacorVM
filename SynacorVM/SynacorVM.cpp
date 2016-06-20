@@ -2,15 +2,6 @@
 
 #include "SynacorVM.h"
 
-#include <iostream>
-#include <string>
-#include <memory>
-#include <algorithm>
-#include <assert.h>
-
-#include <QCoreApplication>
-#include <QThread>
-
 #define VERBOSE_PRINTS 0
 
 SynacorVM::SynacorVM(QObject *parent)
@@ -18,6 +9,7 @@ SynacorVM::SynacorVM(QObject *parent)
 	, registers(c_dwNumRegisters)
 	, breakpoints(c_dwAddressSpace)
 	, inst(0)
+	, callAddr(0)
 	, state(VMS_HALTED)
 	, loaded(false)
 	, numReturnsUntilStepOverEnds(0)
@@ -109,6 +101,7 @@ void SynacorVM::reset()
 	memory = startMemoryBU;
 	registers = std::vector<uint16_t>(c_dwNumRegisters);
 	bufferedInput = QString();
+	fullOutput.clear();
 	started = false;
 }
 
@@ -134,6 +127,170 @@ void SynacorVM::updateForever()
 			QCoreApplication::processEvents();
 		}
 	}
+}
+
+static const uint16_t SERIALIZE_VERSION = 1;
+
+void SynacorVM::getSaveState(const QString &path)
+{
+	std::ofstream out(path.toStdString(), std::ios::out | std::ios::binary);
+	if (!out.good())
+	{
+		return;
+	}
+
+	std::vector<uint16_t> state;
+	state.push_back(SERIALIZE_VERSION);
+	state.push_back((uint16_t)memory.size());
+	state.insert(state.end(), memory.begin(), memory.end());
+	state.push_back((uint16_t)registers.size());
+	state.insert(state.end(), registers.begin(), registers.end());
+	state.push_back((uint16_t)stack.size());
+	state.insert(state.end(), stack.begin(), stack.end());
+	state.insert(state.end(), stackSource.begin(), stackSource.end());
+	uint16_t numBreakpoints = 0;
+	for (size_t i = 0; i < breakpoints.size(); i++)
+	{
+		if (breakpoints[i])
+		{
+			numBreakpoints++;
+		}
+	}
+	state.push_back(numBreakpoints);
+	for (size_t i = 0; i < breakpoints.size(); i++)
+	{
+		if (breakpoints[i])
+		{
+			state.push_back((uint16_t)i);
+		}
+	}
+	uint32_t outputSize = (uint32_t)fullOutput.size();
+	state.push_back((uint16_t)(outputSize >> 16));
+	state.push_back((uint16_t)(outputSize & 0xFFFF));
+	for (uint32_t i = 0; i < outputSize; i++)
+	{
+		state.push_back((uint16_t)fullOutput[i]);
+	}
+
+	uint32_t inputSize = (uint32_t)bufferedInput.length();
+	state.push_back((uint16_t)(inputSize >> 16));
+	state.push_back((uint16_t)(inputSize & 0xFFFF));
+	for (uint32_t i = 0; i < inputSize; i++)
+	{
+		state.push_back((uint16_t)bufferedInput[i].toLatin1());
+	}
+
+	state.push_back(callAddr);
+	state.push_back(inst);
+	state.push_back((uint16_t)this->state);
+	out.write((const char *)&state[0], state.size() * sizeof(uint16_t));
+
+	emit updateRecentPath(path);
+}
+
+void SynacorVM::putLoadState(const QString &path)
+{
+	std::ifstream in(path.toStdString(), std::ios::in | std::ios::binary);
+
+	std::vector<uint16_t> state;
+	while (in.good())
+	{
+		uint16_t val(0);
+		in.read((char *)&val, sizeof(uint16_t));
+		if (in.good())
+		{
+			state.push_back(val);
+		}
+	}
+
+	auto itr = state.begin();
+	uint16_t version = *itr++;
+	if (version > SERIALIZE_VERSION)
+	{
+		return;
+	}
+
+	this->state = VMS_HALTED;
+
+	uint16_t memorySize = *itr++;
+	assert(memorySize == c_dwAddressSpace);
+	memory.clear();
+	memory.insert(memory.end(), itr, itr + memorySize);
+	itr += memorySize;
+	for (uint16_t addr = 0; addr < memorySize; addr++)
+	{
+		emit updateMemory(addr, memory[addr]);
+	}
+
+	uint16_t registersSize = *itr++;
+	assert(registersSize == c_dwNumRegisters);
+	registers.clear();
+	registers.insert(registers.end(), itr, itr + registersSize);
+	itr += registersSize;
+	for (uint16_t reg = 0; reg < registersSize; reg++)
+	{
+		emit updateRegister(reg, registers[reg]);
+	}
+
+	uint16_t stackSize = *itr++;
+	stack.clear();
+	stackSource.clear();
+	stack.insert(stack.end(), itr, itr + stackSize);
+	itr += stackSize;
+	stackSource.insert(stackSource.end(), itr, itr + stackSize);
+	itr += stackSize;
+	emit clearStack();
+	for (uint16_t stackIndex = 0; stackIndex < stackSize; stackIndex++)
+	{
+		emit pushStack(stack[stackSize - 1 - stackIndex], (StackSource)stackSource[stackSize - 1 - stackIndex]);
+	}
+
+	uint16_t numBreakpoints = *itr++;
+	breakpoints = std::vector<bool>(memorySize, false);
+	for (uint16_t i = 0; i < numBreakpoints; i++)
+	{
+		uint16_t addr = *itr++;
+		breakpoints[addr] = true;
+	}
+	for (uint16_t addr = 0; addr < breakpoints.size(); addr++)
+	{
+		emit updateBreakpoint(addr, breakpoints[addr]);
+	}
+
+	uint32_t outputSize = 0;
+	outputSize |= (*itr++) << 16;
+	outputSize |= (*itr++);
+	fullOutput.clear();
+	fullOutput.reserve(outputSize);
+	for (uint32_t i = 0; i < outputSize; i++)
+	{
+		fullOutput += (char)(*itr++);
+	}
+	emit clear();
+	emit print(QString(fullOutput.c_str()));
+
+	uint32_t inputSize = 0;
+	inputSize |= (*itr++) << 16;
+	inputSize |= (*itr++);
+	bufferedInput.clear();
+	bufferedInput.reserve(inputSize);
+	for (uint32_t i = 0; i < inputSize; i++)
+	{
+		bufferedInput += (char)(*itr++);
+	}
+
+	callAddr = *itr++;
+	emit setCallAddress(callAddr);
+
+	inst = *itr++;
+	emit updatePointer(inst);
+
+	this->state = (VMState)(*itr++);
+
+	assert(itr == state.end());
+
+	loaded = true;
+	return;
 }
 
 void SynacorVM::aboutToQuit()
@@ -324,7 +481,10 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		const uint16_t a = Translate(reg);
 		stack.push_back(a);
 
-		emit pushStack(a, (StackSource)(SS_PUSH_R0 + (reg - 32768)));
+		StackSource source = (StackSource)(SS_PUSH_R0 + (reg - 32768));
+		stackSource.push_back(source);
+
+		emit pushStack(a, source);
 		break;
 	}
 
@@ -337,9 +497,11 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 #endif
 		const uint16_t a = memory[tempInst++];
 		assert(!stack.empty());
+		assert(!stackSource.empty());
 		const uint16_t top = stack.back();
 
 		stack.pop_back();
+		stackSource.pop_back();
 		emit popStack();
 
 		Write(a, top);
@@ -537,8 +699,10 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 #endif
 		const uint16_t a = Translate(memory[tempInst++]);
 		stack.push_back(tempInst);
+		stackSource.push_back(SS_CALL);
 		emit pushStack(tempInst, SS_CALL);
 		tempInst = a;
+		callAddr = a;
 		emit setCallAddress(a);
 
 		if (state == VMS_STEP_OVER)
@@ -569,9 +733,11 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 		{
 			const uint16_t top = stack.back();
 			stack.pop_back();
+			stackSource.pop_back();
 			emit popStack();
 			emit setCallAddress(top);
 			tempInst = top;
+			callAddr = top;
 
 			if (state == VMS_STEP_OVER)
 			{
@@ -599,6 +765,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 	{
 		const uint16_t a = Translate(memory[tempInst++]);
 		emit print(QString((char)a));
+		fullOutput += (char)a;
 		//std::cout << (char)a;
 		break;
 	}
@@ -616,6 +783,7 @@ uint16_t SynacorVM::handleOp(const uint16_t opAddress)
 			bufferedInput.remove(0, 1);
 			Write(a, input);
 			emit print(QString((char)input));
+			fullOutput += (char)input;
 		}
 		else
 		{
@@ -670,14 +838,16 @@ void SynacorVM::changeRegister(uint16_t reg, uint16_t value)
 	Write(reg + 32768, value, false);
 }
 
-void SynacorVM::changeStackPush(uint16_t value)
+void SynacorVM::changeStackPush(uint16_t value, StackSource source)
 {
 	stack.push_back(value);
+	stackSource.push_back(source);
 }
 
 void SynacorVM::changeStackPop()
 {
 	stack.pop_back();
+	stackSource.pop_back();
 }
 
 void SynacorVM::changeStackModify(uint16_t index, uint16_t value)

@@ -22,8 +22,9 @@ int main(int argc, char *argv[])
 	qRegisterMetaType<uint16_t>("uint16_t");
 
     QApplication a(argc, argv);
-	a.setApplicationName("SynacorDebugger");
-	a.setOrganizationName("DavidAndTrevor");
+	QCoreApplication::setApplicationName("SynacorDebugger");
+	QCoreApplication::setOrganizationDomain("knightsofmoo.com");
+	QCoreApplication::setOrganizationName("The Knights of Moo");
 
 	QString displayName = QGuiApplication::applicationDisplayName();
 	QString filePath = QCoreApplication::applicationFilePath();
@@ -34,6 +35,7 @@ int main(int argc, char *argv[])
 
 	regApplications.beginGroup("SupportedTypes");
 	regApplications.setValue(".bin", QString());
+	regApplications.setValue(".syns", QString());
 	regApplications.endGroup();
 
 	regApplications.beginGroup("shell");

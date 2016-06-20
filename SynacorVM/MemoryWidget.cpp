@@ -13,8 +13,48 @@
 
 std::mutex mtxMemoryLock;
 
+static char ToAscii(uint16_t value)
+{
+	if (value <= 127 && value != '\t' && value != '\n')
+	{
+		if (isprint(value))
+		{
+			return (char)value;
+		}
+	}
+	return '.';
+}
+
+static const int VALUES_PER_LINE = 16;
+static QString GetMemoryRowAt(const std::vector<uint16_t> &buffer, int address)
+{
+	QString addressStr = QString("%1").arg(address, 4, 16, QChar('0'));
+	QString hexString;
+	QString asciiString;
+	for (int offset = 0; offset < VALUES_PER_LINE && address + offset < buffer.size(); offset++)
+	{
+		hexString += QString("%1").arg(buffer[address + offset], 4, 16, QChar('0'));
+		if (offset < VALUES_PER_LINE - 1)
+		{
+			hexString += ' ';
+		}
+
+		asciiString += ToAscii(buffer[address + offset]);
+	}
+	if (address + VALUES_PER_LINE > buffer.size())
+	{
+		for (int offset = (int)buffer.size() - address; offset < VALUES_PER_LINE - 1; offset++)
+		{
+			hexString += "     ";
+		}
+		hexString += "    ";
+	}
+	return QString("%1  |  %2  |  %3").arg(addressStr, hexString, asciiString);
+}
+
 MemoryWidget::MemoryWidget(QWidget *parent)
 	: QDockWidget("Memory", parent)
+	, rawMemory(c_dwAddressSpace)
 {
 	setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	setFeatures(DockWidgetMovable | DockWidgetFloatable);
@@ -91,6 +131,15 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 
 	setWidget(internalWidget);
 	internalWidget->setMinimumWidth((parent->size().width() - 20) / 2);
+
+	for (int address = 0; address < rawMemory.size(); address += VALUES_PER_LINE)
+	{
+		memory << GetMemoryRowAt(rawMemory, address);
+	}
+	for (int i = 0; i < c_dwNumRegisters; i++)
+	{
+		registers << QString("r%1:\t%2").arg(i, 2, 16, QChar('0')).arg(0, 4, 16, QChar('0'));
+	}
 }
 
 void MemoryWidget::update(uint16_t address, uint16_t value)
@@ -98,45 +147,6 @@ void MemoryWidget::update(uint16_t address, uint16_t value)
 	std::lock_guard<std::mutex> lock(mtxMemoryLock);
 
 	pendingMemoryUpdates[address] = value;
-}
-
-static char ToAscii(uint16_t value)
-{
-	if (value <= 127 && value != '\t' && value != '\n')
-	{
-		if (isprint(value))
-		{
-			return (char)value;
-		}
-	}
-	return '.';
-}
-
-static const int VALUES_PER_LINE = 16;
-static QString GetMemoryRowAt(const std::vector<uint16_t> &buffer, int address)
-{
-	QString addressStr = QString("%1").arg(address, 4, 16, QChar('0'));
-	QString hexString;
-	QString asciiString;
-	for (int offset = 0; offset < VALUES_PER_LINE && address + offset < buffer.size(); offset++)
-	{
-		hexString += QString("%1").arg(buffer[address + offset], 4, 16, QChar('0'));
-		if (offset < VALUES_PER_LINE - 1)
-		{
-			hexString += ' ';
-		}
-
-		asciiString += ToAscii(buffer[address + offset]);
-	}
-	if (address + VALUES_PER_LINE > buffer.size())
-	{
-		for (int offset = (int)buffer.size() - address; offset < VALUES_PER_LINE - 1; offset++)
-		{
-			hexString += "     ";
-		}
-		hexString += "    ";
-	}
-	return QString("%1  |  %2  |  %3").arg(addressStr, hexString, asciiString);
 }
 
 void MemoryWidget::load(const std::vector<uint16_t> &buffer)
@@ -195,35 +205,38 @@ void MemoryWidget::update()
 {
 	std::lock_guard<std::mutex> lock(mtxMemoryLock);
 
-	std::unordered_set<int> modifiedRows;
-	modifiedRows.reserve(pendingMemoryUpdates.size());
-	for (auto itr = pendingMemoryUpdates.begin(); itr != pendingMemoryUpdates.end(); itr++)
+	if (pendingMemoryUpdates.size() > 0)
 	{
-		uint16_t address = itr->first;
-		uint16_t value = itr->second;
-		if (address <= 32767)
+		std::unordered_set<int> modifiedRows;
+		modifiedRows.reserve(pendingMemoryUpdates.size());
+		for (auto itr = pendingMemoryUpdates.begin(); itr != pendingMemoryUpdates.end(); itr++)
 		{
-			if (modifiedRows.find(address / VALUES_PER_LINE) == modifiedRows.end())
+			uint16_t address = itr->first;
+			uint16_t value = itr->second;
+			if (address <= 32767)
 			{
-				modifiedRows.insert(address / VALUES_PER_LINE);
+				if (modifiedRows.find(address / VALUES_PER_LINE) == modifiedRows.end())
+				{
+					modifiedRows.insert(address / VALUES_PER_LINE);
+				}
+				rawMemory[address] = value;
+				flagDirty(MM_MEMORY);
 			}
-			rawMemory[address] = value;
-			flagDirty(MM_MEMORY);
+			else if (address <= 32775)
+			{
+				registers[address - 32768] = QString("r%1:\t%2").arg(address - 32768, 2, 16, QChar('0')).arg(value, 4, 16, QChar('0'));
+				flagDirty(MM_REGISTERS);
+			}
+			else
+			{
+				assert(0 && "Invalid address");
+			}
 		}
-		else if (address <= 32775)
+		pendingMemoryUpdates.clear();
+		for (int row : modifiedRows)
 		{
-			registers[address - 32768] = QString("r%1:\t%2").arg(address - 32768, 2, 16, QChar('0')).arg(value, 4, 16, QChar('0'));
-			flagDirty(MM_REGISTERS);
+			memory[row] = GetMemoryRowAt(rawMemory, row * VALUES_PER_LINE);
 		}
-		else
-		{
-			assert(0 && "Invalid address");
-		}
-	}
-	pendingMemoryUpdates.clear();
-	for (int row : modifiedRows)
-	{
-		memory[row] = GetMemoryRowAt(rawMemory, row * VALUES_PER_LINE);
 	}
 
 	for (int i = 0; i < MM_MAX_ELEM; i++)
@@ -255,6 +268,12 @@ void MemoryWidget::pushStack(uint16_t value, StackSource source)
 void MemoryWidget::popStack()
 {
 	rawStack.pop_back();
+	flagDirty(MM_STACK);
+}
+
+void MemoryWidget::clearStack()
+{
+	rawStack.clear();
 	flagDirty(MM_STACK);
 }
 

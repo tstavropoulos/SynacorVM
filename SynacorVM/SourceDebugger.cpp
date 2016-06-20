@@ -6,22 +6,6 @@
 #include "MemoryWidget.h"
 #include "AssemblyWidget.h"
 
-#include <iostream>
-#include <fstream>
-
-#include <QDebug>
-#include <QFile>
-#include <QFileDialog>
-#include <QTimer>
-#include <QApplication>
-#include <QToolBar>
-#include <QToolButton>
-#include <QMainWindow>
-#include <QThread>
-
-#include <QMessageBox>
-
-
 SourceDebugger::SourceDebugger(QMainWindow *parent)
 	: QObject(parent)
 	, DState(DS_NOT_RUN)
@@ -39,6 +23,11 @@ SourceDebugger::SourceDebugger(QMainWindow *parent)
 	loadAction->setIcon(QIcon(":/Open.png"));
 	toolbar->addAction(loadAction);
 	connect(loadAction, SIGNAL(triggered()), this, SLOT(load()));
+
+	QAction *saveAction = new QAction("&Save State", this);
+	saveAction->setIcon(QIcon(":/Save.png"));
+	toolbar->addAction(saveAction);
+	connect(saveAction, SIGNAL(triggered()), this, SLOT(saveState()));
 
 	toolbar->addSeparator();
 
@@ -98,15 +87,19 @@ SourceDebugger::SourceDebugger(QMainWindow *parent)
 
 	//Connect signals from VM to Assembly Widget
 	connect(synacorVM, SIGNAL(updatePointer(uint16_t)), assemblyWidget, SLOT(updatePointer(uint16_t)));
+	connect(synacorVM, SIGNAL(updateBreakpoint(uint16_t, bool)), assemblyWidget, SLOT(updateBreakpoint(uint16_t, bool)));
 
 	//Connect signals from VM to UI
 	connect(synacorVM, SIGNAL(throwError(VMErrors)), this, SLOT(notifyError(VMErrors)));
 	connect(synacorVM, SIGNAL(newDebuggerState(DebuggerState)), this, SLOT(updateDebuggerState(DebuggerState)));
+	connect(synacorVM, SIGNAL(updateRecentPath(const QString &)), this, SLOT(updateRecentPath(const QString &)));
 
 	//Connect signals from UI to VM
 	connect(this, SIGNAL(aboutToQuit()), synacorVM, SLOT(aboutToQuit()));
 	connect(this, SIGNAL(pauseVM(bool)), synacorVM, SLOT(pause(bool)));
 	connect(this, SIGNAL(activateVM()), synacorVM, SLOT(activateVM()));
+	connect(this, SIGNAL(getSaveState(const QString &)), synacorVM, SLOT(getSaveState(const QString &)));
+	connect(this, SIGNAL(putLoadState(const QString &)), synacorVM, SLOT(putLoadState(const QString &)));
 
 	//Connect signals from VM to Output Widget
 	connect(synacorVM, SIGNAL(print(const QString&)), outputWidget, SLOT(print(const QString&)));
@@ -120,13 +113,14 @@ SourceDebugger::SourceDebugger(QMainWindow *parent)
 	connect(synacorVM, SIGNAL(updateRegister(uint16_t, uint16_t)), memoryWidget, SLOT(updateRegister(uint16_t, uint16_t)));
 	connect(synacorVM, SIGNAL(pushStack(uint16_t, StackSource)), memoryWidget, SLOT(pushStack(uint16_t, StackSource)));
 	connect(synacorVM, SIGNAL(popStack()), memoryWidget, SLOT(popStack()));
+	connect(synacorVM, SIGNAL(clearStack()), memoryWidget, SLOT(clearStack()));
 	connect(synacorVM, SIGNAL(setCallAddress(uint16_t)), memoryWidget, SLOT(setCallAddress(uint16_t)));
 	connect(synacorVM, SIGNAL(updatePointer(uint16_t)), memoryWidget, SLOT(updatePointer(uint16_t)));
 
 	//Connect signals from Memory Widget for modifying VM
 	connect(memoryWidget, SIGNAL(changeMemory(uint16_t, uint16_t)), synacorVM, SLOT(changeMemory(uint16_t, uint16_t)));
 	connect(memoryWidget, SIGNAL(changeRegister(uint16_t, uint16_t)), synacorVM, SLOT(changeRegister(uint16_t, uint16_t)));
-	connect(memoryWidget, SIGNAL(changeStackPush(uint16_t)), synacorVM, SLOT(changeStackPush(uint16_t)));
+	connect(memoryWidget, SIGNAL(changeStackPush(uint16_t, StackSource source)), synacorVM, SLOT(changeStackPush(uint16_t, StackSource source)));
 	connect(memoryWidget, SIGNAL(changeStackPop()), synacorVM, SLOT(changeStackPop()));
 	connect(memoryWidget, SIGNAL(changeStackModify(uint16_t, uint16_t)), synacorVM, SLOT(changeStackModify(uint16_t, uint16_t)));
 
@@ -143,16 +137,80 @@ SourceDebugger::SourceDebugger(QMainWindow *parent)
 	emit activateVM();
 }
 
+void RecentOpener::load()
+{
+	sourceDebugger->loadfile(file);
+}
+
 void SourceDebugger::load()
 {
-	QString filepath = QFileDialog::getOpenFileName(parentWindow, QString("Select Synacor Binary File"), QString(), QString("*.bin"));
+	QSettings settings;
+	QString path = settings.value("Recent/Path").toString();
 
+	QString filepath = QFileDialog::getOpenFileName(parentWindow, QString("Open File"), path, QString("Binary or Save State(*.bin *.syns);;All files (*.*)"));
 	loadfile(filepath);
+}
+
+void SourceDebugger::updateRecentPath(const QString &filepath)
+{
+	QFileInfo file(filepath);
+	if (!file.exists())
+	{
+		return;
+	}
+
+	QSettings settings;
+	bool foundExisting = false;
+	for (uint32_t i = 0; i < MAX_RECENT_FILES; i++)
+	{
+		if (!foundExisting)
+		{
+			if (settings.value(QString("Recent/%1").arg(i)).toString().toCaseFolded() == filepath.toCaseFolded())
+			{
+				foundExisting = true;
+			}
+		}
+		else
+		{
+			settings.setValue(QString("Recent/%1").arg(i - 1), settings.value(QString("Recent/%1").arg(i)));
+		}
+	}
+	if (foundExisting)
+	{
+		settings.setValue(QString("Recent/%1").arg(MAX_RECENT_FILES - 1), "");
+	}
+
+	settings.setValue("Recent/Path", file.absoluteDir().absolutePath());
+	for (uint32_t i = MAX_RECENT_FILES - 1; i > 0; i--)
+	{
+		settings.setValue(QString("Recent/%1").arg(i), settings.value(QString("Recent/%1").arg(i - 1)));
+	}
+	settings.setValue("Recent/0", filepath);
+	settings.sync();
 }
 
 bool SourceDebugger::loadfile(const QString &filepath)
 {
 	if (filepath.isEmpty())
+	{
+		return false;
+	}
+
+	QFileInfo file(filepath);
+	if (!file.exists())
+	{
+		return false;
+	}
+	updateRecentPath(filepath);
+
+	if (file.suffix() == "syns")
+	{
+		emit putLoadState(filepath);
+		return true;
+	}
+
+	const qint64 fileSize = file.size();
+	if (fileSize > c_dwAddressSpace * sizeof(uint16_t))
 	{
 		return false;
 	}
@@ -218,6 +276,20 @@ void SourceDebugger::notifyError(VMErrors error)
 		break;
 	}
 	}
+}
+
+void SourceDebugger::saveState()
+{
+	QSettings settings;
+	QString path = settings.value("Recent/Path").toString();
+
+	QString filepath = QFileDialog::getSaveFileName(parentWindow, QString("Save State"), path, QString("Save State(*.syns)"));
+	if (filepath.isEmpty())
+	{
+		return;
+	}
+	emit getSaveState(filepath);
+	updateRecentPath(filepath);
 }
 
 void SourceDebugger::reset()

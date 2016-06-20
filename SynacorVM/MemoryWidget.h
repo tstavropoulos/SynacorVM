@@ -63,6 +63,7 @@ public slots:
 	void updateRegister(uint16_t reg, uint16_t value);
 	void pushStack(uint16_t value, StackSource source);
 	void popStack();
+	void clearStack();
 	void setCallAddress(uint16_t address);
 	void updatePointer(uint16_t address);
 
@@ -75,7 +76,7 @@ signals:
 	//VM Signals
 	void changeMemory(uint16_t address, uint16_t value);
 	void changeRegister(uint16_t reg, uint16_t value);
-	void changeStackPush(uint16_t value);
+	void changeStackPush(uint16_t value, StackSource source);
 	void changeStackPop();
 	void changeStackModify(uint16_t index, uint16_t value);
 

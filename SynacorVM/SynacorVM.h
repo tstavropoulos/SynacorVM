@@ -69,10 +69,13 @@ protected:
 	std::vector<uint16_t> memory;
 	std::vector<uint16_t> registers;
 	std::vector<uint16_t> stack;
+	std::vector<uint16_t> stackSource;
 
 	std::vector<bool> breakpoints;
+	std::string fullOutput;
 
 	uint16_t inst;
+	uint16_t callAddr;
 
 	bool loaded;
 	bool quitting;
@@ -102,12 +105,16 @@ public slots:
 	//Memory Slots
 	void changeMemory(uint16_t address, uint16_t value);
 	void changeRegister(uint16_t reg, uint16_t value);
-	void changeStackPush(uint16_t value);
+	void changeStackPush(uint16_t value, StackSource source);
 	void changeStackPop();
 	void changeStackModify(uint16_t index, uint16_t value);
 
 	//Assembly Slots
 	void setBreakpoint(uint16_t address, bool set);
+
+	// State serialization
+	void getSaveState(const QString &path);
+	void putLoadState(const QString &path);
 
 signals:
 	//Output Signals
@@ -118,13 +125,16 @@ signals:
 	//UI Signals
 	void throwError(VMErrors error);
 	void newDebuggerState(DebuggerState dState);
+	void updateRecentPath(const QString &filepath);
 
 	//Memory Signals
 	void updateMemory(uint16_t address, uint16_t value);
 	void updateRegister(uint16_t reg, uint16_t value);
 	void pushStack(uint16_t value, StackSource source);
 	void popStack();
+	void clearStack();
 	void setCallAddress(uint16_t address);
+	void updateBreakpoint(uint16_t address, bool set);
 
 	//Assembly Signals
 	void updatePointer(uint16_t address);
