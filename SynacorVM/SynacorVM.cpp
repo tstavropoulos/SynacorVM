@@ -359,7 +359,7 @@ void SynacorVM::stepOver()
 	else
 	{
 		state = VMS_STEP_OVER;
-		numReturnsUntilStepOverEnds = 1;
+		numReturnsUntilStepOverEnds = 0;
 	}
 	ignoreNextBreakpoint = breakpoints[inst];
 }
