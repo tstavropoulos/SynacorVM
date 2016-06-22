@@ -1,15 +1,8 @@
 #include "stdafx.h"
 
+#include "RegisterItemDelegate.h"
 #include "MemoryWidget.h"
 #include "SynacorVM.h"
-
-#include <assert.h>
-#include <mutex>
-
-#include <QListView>
-#include <QHBoxLayout>
-#include <QTabWidget>
-#include <QStringListModel>
 
 std::mutex mtxMemoryLock;
 
@@ -91,7 +84,10 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	registerView->setModel(registerModel);
 	registerView->setFont(monoSpacedFont);
 	registerView->setMovement(QListView::Static);
-	registerView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+	registerView->setEditTriggers(QAbstractItemView::DoubleClicked);
+	RegisterItemDelegate *registerItemDelegate = new RegisterItemDelegate();
+	registerView->setItemDelegate(registerItemDelegate);
+	connect(registerItemDelegate, SIGNAL(registerEdited(uint16_t, uint16_t)), this, SLOT(editedRegisterValue(uint16_t, uint16_t)));
 
 	tabWidget->addTab(registerPage, "Registers");
 
@@ -354,4 +350,10 @@ void MemoryWidget::callstackClicked(const QModelIndex &index)
 
 	uint16_t address = callstack[index.row()].toInt(nullptr, 16);
 	emit scrollToInstruction(address);
+}
+
+void MemoryWidget::editedRegisterValue(uint16_t reg, uint16_t value)
+{
+	updateRegister(reg, value);
+	emit changeRegister(reg, value);
 }

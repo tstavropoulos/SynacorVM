@@ -11,6 +11,7 @@
 #include <fstream>
 #include <memory>
 #include <algorithm>
+#include <mutex>
 
 #include <cmath>
 #include <cctype>
@@ -31,6 +32,15 @@
 #include <QToolButton>
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QListView>
+#include <QHBoxLayout>
+#include <QTabWidget>
+#include <QStringListModel>
+#include <QStyledItemDelegate>
+#include <QPainter>
+#include <QLineEdit>
+#include <QDockWidget>
+#include <QLabel>
 
 //Windows Includes
 //#define WIN32_LEAN_AND_MEAN

@@ -1,9 +1,6 @@
 #ifndef MEMORY_WIDGET_H_
 #define MEMORY_WIDGET_H_
 
-#include <QDockWidget>
-
-
 QT_BEGIN_NAMESPACE
 class QListView;
 class QStringListModel;
@@ -71,6 +68,7 @@ public slots:
 	void reset();
 	void update();
 	void callstackClicked(const QModelIndex &index);
+	void editedRegisterValue(uint16_t reg, uint16_t value);
 
 signals:
 	//VM Signals

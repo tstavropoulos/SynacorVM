@@ -32,6 +32,12 @@ SOURCES += AssemblyWidget.cpp
 HEADERS += MemoryWidget.h
 SOURCES += MemoryWidget.cpp
 
+HEADERS += RegisterEditor.h
+SOURCES += RegisterEditor.cpp
+
+HEADERS += RegisterItemDelegate.h
+SOURCES += RegisterItemDelegate.cpp
+
 HEADERS += OutputWidget.h
 SOURCES += OutputWidget.cpp
 
