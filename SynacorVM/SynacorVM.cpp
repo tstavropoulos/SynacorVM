@@ -933,7 +933,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "EQ  ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -947,7 +947,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "GT  ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -999,7 +999,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "ADD ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -1013,7 +1013,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "MULT";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -1027,7 +1027,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "MOD ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -1041,7 +1041,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "AND ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -1055,7 +1055,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "OR  ";
 				if (i + 3 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
@@ -1069,7 +1069,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "NOT ";
 				if (i + 2 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
 				break;
@@ -1082,7 +1082,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "RMEM";
 				if (i + 2 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 					arguments += StringTranslate(memory[i++]);
 				}
 				break;
@@ -1139,7 +1139,7 @@ void SynacorVM::getAssembly(QStringList &instr, QStringList &args, std::vector<u
 				instructions = "IN  ";
 				if (i + 1 < c_dwAddressSpace)
 				{
-					arguments += QString("r%1  ").arg(memory[i++] - 32768, 2, 16, QChar('0'));
+					arguments += StringTranslate(memory[i++]);
 				}
 				break;
 			}
