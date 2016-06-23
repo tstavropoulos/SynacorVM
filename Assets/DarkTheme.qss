@@ -46,6 +46,16 @@ QLabel {
 	background: #4E4E4E;
 }
 
+QLabel[accessibleName="edit"] {
+	font: "Consolas";
+	font-size: 10pt;
+	qproperty-alignment: AlignLeft;
+	color: lightgray;
+	background: #1E1E1E;
+	padding-top: 2;
+	padding-left: 0;
+}
+
 QTextEdit {
 	font: "Consolas";
 	font-size: 10pt;
@@ -60,6 +70,13 @@ QListView {
 QLineEdit {
 	font: "Consolas";
 	font-size: 12pt;
+	border: 1px solid darkgray;
+	background-color: #1E1E1E;
+}
+
+QLineEdit[accessibleName="edit"] {
+	font: "Consolas";
+	font-size: 10pt;
 	border: 1px solid darkgray;
 	background-color: #1E1E1E;
 }

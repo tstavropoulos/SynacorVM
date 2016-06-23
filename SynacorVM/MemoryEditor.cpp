@@ -1,46 +1,78 @@
 #include "stdafx.h"
 
-#include "RegisterEditor.h"
+#include "MemoryEditor.h"
 
-RegisterEditor::RegisterEditor(QWidget *parent, const QString &text) : QWidget(parent)
+MemoryEditor::MemoryEditor(QWidget *parent, const QString &text) : QWidget(parent)
 {
 	setAutoFillBackground(true);
 
 	layout = new QHBoxLayout();
 	label = new QLabel();
-	edit = new QLineEdit();
+	label->setFixedWidth(label->fontMetrics().width("0000  |  "));
+	label->setAccessibleName("edit");
 	layout->addWidget(label);
-	layout->addWidget(edit);
+	for (int i = 0; i < 16; i++)
+	{
+		edits[i] = new QLineEdit();
+		edits[i]->setMaxLength(4);
+		edits[i]->setFixedWidth(edits[i]->fontMetrics().width("0000") + 14);
+		edits[i]->setAccessibleName("edit");
+
+		layout->addWidget(edits[i]);
+		connections[i] = connect(edits[i], &QLineEdit::editingFinished, this, &MemoryEditor::sendEditingFinished);
+	}
+	layout->addStretch();
 	layout->setMargin(0);
 	layout->setSpacing(0);
 	setLayout(layout);
 
-	connect(edit, &QLineEdit::editingFinished, this, &RegisterEditor::sendEditingFinished);
-
 	setString(text);
 }
 
-void RegisterEditor::setString(const QString &s)
+MemoryEditor::~MemoryEditor()
 {
-	int cutIndex = s.indexOf(":\t");
+	for (int i = 0; i < 16; i++)
+	{
+		disconnect(connections[i]);
+		layout->removeWidget(edits[i]);
+		delete edits[i];
+	}
+	layout->removeWidget(label);
+	delete label;
+	delete layout;
+}
+
+void MemoryEditor::setString(const QString &s)
+{
+	int cutIndex = s.indexOf("  |  ");
 	if (cutIndex == -1)
 	{
-		editText = s;
+		labelText = s;
 	}
 	else
 	{
-		cutIndex += 2;
+		cutIndex += 5;
 		labelText = s.left(cutIndex);
-		editText = s.mid(cutIndex);
+		for (int i = 0; i < 16; i++)
+		{
+			editText[i] = s.mid(cutIndex, 4);
+			cutIndex += 5;
+		}
 	}
 
 	label->setText(labelText);
-	edit->setText(editText);
+	for (int i = 0; i < 16; i++)
+	{
+		edits[i]->setText(editText[i]);
+	}
 }
 
-void RegisterEditor::sendEditingFinished()
+void MemoryEditor::sendEditingFinished()
 {
-	editText = edit->text();
+	for (int i = 0; i < 16; i++)
+	{
+		editText[i] = edits[i]->text();
+	}
 
 	emit editingFinished();
 }

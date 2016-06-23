@@ -38,6 +38,12 @@ SOURCES += RegisterEditor.cpp
 HEADERS += RegisterItemDelegate.h
 SOURCES += RegisterItemDelegate.cpp
 
+HEADERS += MemoryEditor.h
+SOURCES += MemoryEditor.cpp
+
+HEADERS += MemoryItemDelegate.h
+SOURCES += MemoryItemDelegate.cpp
+
 HEADERS += OutputWidget.h
 SOURCES += OutputWidget.cpp
 

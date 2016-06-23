@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "RegisterItemDelegate.h"
+#include "MemoryItemDelegate.h"
 #include "MemoryWidget.h"
 #include "SynacorVM.h"
 
@@ -71,7 +72,10 @@ MemoryWidget::MemoryWidget(QWidget *parent)
 	memoryView->setModel(memoryModel);
 	memoryView->setFont(monoSpacedFont);
 	memoryView->setMovement(QListView::Static);
-	memoryView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+	memoryView->setEditTriggers(QAbstractItemView::DoubleClicked);
+	MemoryItemDelegate *memoryItemDelegate = new MemoryItemDelegate();
+	memoryView->setItemDelegate(memoryItemDelegate);
+	connect(memoryItemDelegate, SIGNAL(memoryEdited(uint16_t, uint16_t)), this, SLOT(editedMemoryValue(uint16_t, uint16_t)));
 
 	tabWidget->addTab(memoryPage, "Memory");
 
@@ -356,4 +360,12 @@ void MemoryWidget::editedRegisterValue(uint16_t reg, uint16_t value)
 {
 	updateRegister(reg, value);
 	emit changeRegister(reg, value);
+	update();
+}
+
+void MemoryWidget::editedMemoryValue(uint16_t addr, uint16_t value)
+{
+	updateMemory(addr, value);
+	emit changeMemory(addr, value);
+	update();
 }

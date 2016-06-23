@@ -69,6 +69,7 @@ public slots:
 	void update();
 	void callstackClicked(const QModelIndex &index);
 	void editedRegisterValue(uint16_t reg, uint16_t value);
+	void editedMemoryValue(uint16_t addr, uint16_t value);
 
 signals:
 	//VM Signals

@@ -19,11 +19,9 @@ public:
 
 	QSize sizeHint(const QStyleOptionViewItem &option,
 				   const QModelIndex &index) const Q_DECL_OVERRIDE;
+
 signals:
 	void registerEdited(uint16_t index, uint16_t value) const;
-
-private slots:
-	void commitAndCloseEditor();
 };
 
 #endif //REGISTER_ITEM_DELEGATE_H_

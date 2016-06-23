@@ -1,50 +1,45 @@
 #include "stdafx.h"
 
-#include "RegisterEditor.h"
-#include "RegisterItemDelegate.h"
+#include "MemoryEditor.h"
+#include "MemoryItemDelegate.h"
 
-RegisterItemDelegate::RegisterItemDelegate(QObject *parent) : QStyledItemDelegate(parent)
+MemoryItemDelegate::MemoryItemDelegate(QObject *parent) : QStyledItemDelegate(parent)
 {
 
 }
 
-QWidget *RegisterItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option,
+QWidget *MemoryItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option,
 									  const QModelIndex &index) const
 {
 	if (index.data().canConvert<QString>())
 	{
-		RegisterEditor *registerEditor = new RegisterEditor(parent, index.data().toString());
-		connect(registerEditor, SIGNAL(editingFinished()), this, SLOT(commitAndCloseEditor()));
-		return registerEditor;
+		MemoryEditor *memoryEditor = new MemoryEditor(parent, index.data().toString());
+		return memoryEditor;
 	}
 	return QStyledItemDelegate::createEditor(parent, option, index);
 }
 
-void RegisterItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+void MemoryItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
-	RegisterEditor *registerEditor = qobject_cast<RegisterEditor *>(editor);
-	registerEditor->setString(index.data().toString());
+	MemoryEditor *memoryEditor = qobject_cast<MemoryEditor *>(editor);
+	memoryEditor->setString(index.data().toString());
 }
 
-void RegisterItemDelegate::setModelData(QWidget *editor,
+void MemoryItemDelegate::setModelData(QWidget *editor,
 										QAbstractItemModel *,
 										const QModelIndex &index) const
 {
-	RegisterEditor *registerEditor = qobject_cast<RegisterEditor *>(editor);
-	uint16_t value = (uint16_t)registerEditor->getEditText().toUInt(nullptr, 16);
-	emit registerEdited((uint16_t)index.row(), value);
+	MemoryEditor *memoryEditor = qobject_cast<MemoryEditor *>(editor);
+	for (int i = 0; i < 16; i++)
+	{
+		uint16_t value = (uint16_t)memoryEditor->getEditText(i).toUInt(nullptr, 16);
+		emit memoryEdited((uint16_t)index.row() * 16 + i, value);
+	}
 }
 
-QSize RegisterItemDelegate::sizeHint(const QStyleOptionViewItem &,
+QSize MemoryItemDelegate::sizeHint(const QStyleOptionViewItem &,
 									 const QModelIndex &) const
 {
-	static RegisterEditor staticDummy(nullptr, "r0:\t0000");
+	static MemoryEditor staticDummy(nullptr, "0000  |  0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000  |  ................");
 	return staticDummy.sizeHint();
-}
-
-void RegisterItemDelegate::commitAndCloseEditor()
-{
-	RegisterEditor *registerEditor = qobject_cast<RegisterEditor *>(sender());
-	emit commitData(registerEditor);
-	emit closeEditor(registerEditor);
 }

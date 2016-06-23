@@ -7,6 +7,8 @@ class RegisterEditor : public QWidget
 
 public:
 	explicit RegisterEditor(QWidget *parent, const QString &text);
+	virtual ~RegisterEditor();
+
 	void setString(const QString &s);
 	const QString &getLabelText() const { return labelText; }
 	const QString &getEditText() const { return editText; }
@@ -24,6 +26,9 @@ protected:
 
 	QString labelText;
 	QString editText;
+	QMetaObject::Connection connection;
+
+	bool editingHasFinished;
 };
 
 #endif //REGISTER_EDITOR_H_

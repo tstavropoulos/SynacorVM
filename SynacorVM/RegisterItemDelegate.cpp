@@ -5,7 +5,6 @@
 
 RegisterItemDelegate::RegisterItemDelegate(QObject *parent) : QStyledItemDelegate(parent)
 {
-
 }
 
 QWidget *RegisterItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option,
@@ -14,7 +13,6 @@ QWidget *RegisterItemDelegate::createEditor(QWidget *parent, const QStyleOptionV
 	if (index.data().canConvert<QString>())
 	{
 		RegisterEditor *registerEditor = new RegisterEditor(parent, index.data().toString());
-		connect(registerEditor, SIGNAL(editingFinished()), this, SLOT(commitAndCloseEditor()));
 		return registerEditor;
 	}
 	return QStyledItemDelegate::createEditor(parent, option, index);
@@ -27,14 +25,11 @@ void RegisterItemDelegate::setEditorData(QWidget *editor, const QModelIndex &ind
 }
 
 void RegisterItemDelegate::setModelData(QWidget *editor,
-										QAbstractItemModel *model,
+										QAbstractItemModel *,
 										const QModelIndex &index) const
 {
 	RegisterEditor *registerEditor = qobject_cast<RegisterEditor *>(editor);
 	uint16_t value = (uint16_t)registerEditor->getEditText().toUInt(nullptr, 16);
-
-	QString str = QString("%1%2").arg(registerEditor->getLabelText()).arg(value, 4, 16, QChar('0'));
-	model->setData(index, str);
 	emit registerEdited((uint16_t)index.row(), value);
 }
 
@@ -43,11 +38,4 @@ QSize RegisterItemDelegate::sizeHint(const QStyleOptionViewItem &,
 {
 	static RegisterEditor staticDummy(nullptr, "r0:\t0000");
 	return staticDummy.sizeHint();
-}
-
-void RegisterItemDelegate::commitAndCloseEditor()
-{
-	RegisterEditor *registerEditor = qobject_cast<RegisterEditor *>(sender());
-	emit commitData(registerEditor);
-	emit closeEditor(registerEditor);
 }
